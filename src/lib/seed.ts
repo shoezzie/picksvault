@@ -106,7 +106,51 @@ async function seed() {
     }
   }
 
+  // ─── Demo buyer account ─────────────────────────────────────
+  console.log('Creating demo buyer: buyer@demo.picksvault.com')
+  const buyerEmail = 'buyer@demo.picksvault.com'
+  const { data: buyerAuth, error: buyerErr } = await supabase.auth.admin.createUser({
+    email: buyerEmail,
+    password: 'Demo1234!',
+    email_confirm: true,
+    user_metadata: { username: 'demobuyer' },
+  })
+  if (buyerErr && !buyerErr.message.includes('already registered')) {
+    console.error('Buyer auth error:', buyerErr.message)
+  }
+  let buyerId = buyerAuth?.user?.id
+  if (!buyerId) {
+    const { data: list } = await supabase.auth.admin.listUsers()
+    buyerId = list?.users?.find(u => u.email === buyerEmail)?.id
+  }
+  if (buyerId) {
+    await supabase.from('profiles').upsert({
+      id: buyerId,
+      username: 'demobuyer',
+      role: 'buyer',
+      avatar_letter: 'D',
+      available_balance: 100,
+    }, { onConflict: 'id' })
+
+    // Seed a starting deposit ledger entry so /transactions has content
+    const { data: existingLedger } = await supabase.from('ledger_entries')
+      .select('id').eq('user_id', buyerId).eq('type', 'deposit').limit(1)
+    if (!existingLedger?.length) {
+      await supabase.from('ledger_entries').insert({
+        user_id: buyerId,
+        type: 'deposit',
+        amount: 100,
+        balance_after: 100,
+        note: 'Welcome deposit (demo account)',
+      })
+    }
+    console.log('  -> demo buyer ready ($100 balance)')
+  }
+
   console.log('✅ Seed complete!')
+  console.log('')
+  console.log('  Demo buyer login:  buyer@demo.picksvault.com / Demo1234!')
+  console.log('  Demo seller login: firstpitch@demo.picksvault.com / Demo1234!')
 }
 
 seed().catch(console.error)
