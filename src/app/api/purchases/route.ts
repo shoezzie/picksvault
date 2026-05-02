@@ -1,120 +1,134 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
-import Stripe from 'stripe'
+import { createClient as createServiceClient } from '@supabase/supabase-js'
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY ?? 'sk_test_placeholder', {
-  apiVersion: '2026-04-22.dahlia',
-})
+// Insurance pricing rule (test mode):
+//   premium = max($1, 50% of pick price)
+function calcInsurancePremium(price: number) {
+  return Math.max(1, Math.round(price * 0.5 * 100) / 100)
+}
 
 export async function POST(request: NextRequest) {
   try {
     const supabase = await createClient()
     const { data: { user } } = await supabase.auth.getUser()
-
     if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
-    const { pickId } = await request.json()
+    const { pickId, insured = false } = await request.json()
 
-    // Get pick details
-    const { data: pick, error: pickError } = await supabase
+    const service = createServiceClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!,
+    )
+
+    // Get pick
+    const { data: pick, error: pickError } = await service
       .from('picks')
       .select('*')
       .eq('id', pickId)
       .eq('status', 'active')
       .single()
-
     if (pickError || !pick) {
       return NextResponse.json({ error: 'Pick not found or no longer active' }, { status: 404 })
     }
 
-    // Check if already purchased
-    const { data: existingPurchase } = await supabase
+    // Already purchased?
+    const { data: existing } = await service
       .from('purchases')
       .select('id')
       .eq('pick_id', pickId)
       .eq('buyer_id', user.id)
-      .single()
+      .maybeSingle()
+    if (existing) return NextResponse.json({ error: 'Already purchased' }, { status: 409 })
 
-    if (existingPurchase) {
-      return NextResponse.json({ error: 'Already purchased' }, { status: 409 })
-    }
-
-    // Get or create Stripe customer
-    const { data: profile } = await supabase
+    // Get buyer balance
+    const { data: profile } = await service
       .from('profiles')
-      .select('stripe_customer_id, username')
+      .select('available_balance')
       .eq('id', user.id)
       .single()
+    const buyerBalance = Number(profile?.available_balance ?? 0)
 
-    let customerId = profile?.stripe_customer_id
-    if (!customerId && process.env.STRIPE_SECRET_KEY && !process.env.STRIPE_SECRET_KEY.includes('placeholder')) {
-      const customer = await stripe.customers.create({
-        email: user.email,
-        metadata: { supabaseUserId: user.id, username: profile?.username ?? '' },
-      })
-      customerId = customer.id
-      await supabase.from('profiles').update({ stripe_customer_id: customerId }).eq('id', user.id)
-    }
+    const price = Number(pick.price)
+    const premium = insured ? calcInsurancePremium(price) : 0
+    const total = price + premium
 
-    const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000'
-
-    if (!process.env.STRIPE_SECRET_KEY || process.env.STRIPE_SECRET_KEY.includes('placeholder')) {
-      // Demo mode — skip Stripe
-      const { data: purchase } = await supabase
-        .from('purchases')
-        .insert({
-          pick_id: pickId,
-          buyer_id: user.id,
-          amount_paid: pick.price,
-          status: 'pending',
-          stripe_payment_intent_id: `demo_${Date.now()}`,
-        })
-        .select()
-        .single()
-
+    if (buyerBalance < total) {
       return NextResponse.json({
-        checkoutUrl: `${appUrl}/picks/${pickId}?purchased=true`,
-        demo: true,
-        purchase,
-      })
+        error: 'Insufficient balance',
+        balance: buyerBalance,
+        required: total,
+      }, { status: 402 })
     }
 
-    // Create Stripe Checkout Session
-    const session = await stripe.checkout.sessions.create({
-      customer: customerId,
-      payment_method_types: ['card'],
-      line_items: [
-        {
-          price_data: {
-            currency: 'usd',
-            product_data: {
-              name: `${pick.sport} Pick by ${pick.seller_id}`,
-              description: `${pick.tag} — ${pick.game}`,
-            },
-            unit_amount: Math.round(pick.price * 100),
-          },
-          quantity: 1,
-        },
-      ],
-      mode: 'payment',
-      success_url: `${appUrl}/picks/${pickId}?purchased=true&session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: `${appUrl}/picks/${pickId}`,
-      metadata: {
-        pickId,
-        buyerId: user.id,
+    // 1. Deduct buyer balance (price + premium)
+    await service.rpc('move_balance', {
+      p_user_id: user.id,
+      p_field: 'available_balance',
+      p_delta: -total,
+    })
+
+    // 2. Move price to escrow pool
+    await service.rpc('move_pool', { p_pool: 'escrow', p_delta: price })
+
+    // 3. Move premium to insurance pool (if insured)
+    if (premium > 0) {
+      await service.rpc('move_pool', { p_pool: 'insurance', p_delta: premium })
+    }
+
+    // 4. Create purchase record
+    const { data: purchase, error: purchaseError } = await service
+      .from('purchases')
+      .insert({
+        pick_id: pickId,
+        buyer_id: user.id,
+        amount_paid: price,
+        insured,
+        insurance_premium: premium,
+        status: 'pending',
+        stripe_payment_intent_id: `bal_${Date.now()}`,
+      })
+      .select()
+      .single()
+    if (purchaseError) throw purchaseError
+
+    // 5. Bump buyers_count on the pick
+    await service.from('picks')
+      .update({ buyers_count: (pick.buyers_count ?? 0) + 1 })
+      .eq('id', pickId)
+
+    // 6. Ledger entries
+    const ledgerEntries = [
+      {
+        user_id: user.id,
+        type: 'pick_purchase',
+        amount: -price,
+        related_pick_id: pickId,
+        related_purchase_id: purchase.id,
+        note: `Bought pick: ${pick.tag}`,
       },
-    })
+    ]
+    if (premium > 0) {
+      ledgerEntries.push({
+        user_id: user.id,
+        type: 'insurance_premium',
+        amount: -premium,
+        related_pick_id: pickId,
+        related_purchase_id: purchase.id,
+        note: `Pick Protection: ${pick.tag}`,
+      })
+    }
+    await service.from('ledger_entries').insert(ledgerEntries)
 
-    // Create pending purchase record
-    await supabase.from('purchases').insert({
-      pick_id: pickId,
-      buyer_id: user.id,
-      amount_paid: pick.price,
-      status: 'pending',
-      stripe_payment_intent_id: session.payment_intent as string,
-    })
+    // Updated buyer balance
+    const newBalance = buyerBalance - total
 
-    return NextResponse.json({ checkoutUrl: session.url })
+    return NextResponse.json({
+      success: true,
+      purchase,
+      balance: newBalance,
+      checkoutUrl: `/picks/${pickId}?purchased=true`,
+    })
   } catch (err) {
     console.error('Purchase error:', err)
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })

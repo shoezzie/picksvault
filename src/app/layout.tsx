@@ -4,7 +4,7 @@ import Nav from '@/components/Nav'
 
 export const metadata: Metadata = {
   title: 'PicksVault — Sports Picks Marketplace',
-  description: 'Stake-backed sports picks. Sellers put their own money on the line. Buyers get auto-refunded if the pick loses.',
+  description: 'Sports picks with optional Pick Protection — auto-refund to your balance if the pick doesn\'t hit.',
 }
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

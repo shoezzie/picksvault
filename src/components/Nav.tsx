@@ -5,11 +5,12 @@ import { usePathname, useRouter } from 'next/navigation'
 import { useState, useEffect } from 'react'
 import {
   BarChart2, Bookmark, Trophy, Activity, HelpCircle,
-  TrendingUp, Sun, Moon, LogOut, LayoutDashboard, ChevronDown,
-  ShoppingBag
+  Sun, Moon, LogOut, LayoutDashboard, ChevronDown,
+  ShoppingBag, Wallet, Plus
 } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import type { User } from '@supabase/supabase-js'
+import DepositModal from './DepositModal'
 
 export default function Nav() {
   const pathname = usePathname()
@@ -17,15 +18,35 @@ export default function Nav() {
   const [user, setUser] = useState<User | null>(null)
   const [theme, setTheme] = useState<'dark' | 'light'>('dark')
   const [menuOpen, setMenuOpen] = useState(false)
+  const [balance, setBalance] = useState<number | null>(null)
+  const [depositOpen, setDepositOpen] = useState(false)
   const supabase = createClient()
 
+  const refreshBalance = async () => {
+    try {
+      const r = await fetch('/api/balance')
+      if (r.ok) {
+        const d = await r.json()
+        setBalance(typeof d.available === 'number' ? d.available : null)
+      }
+    } catch {}
+  }
+
   useEffect(() => {
-    supabase.auth.getUser().then(({ data }) => setUser(data.user))
+    supabase.auth.getUser().then(({ data }) => {
+      setUser(data.user)
+      if (data.user) refreshBalance()
+    })
     const { data: listener } = supabase.auth.onAuthStateChange((_ev, session) => {
       setUser(session?.user ?? null)
+      if (session?.user) refreshBalance()
+      else setBalance(null)
     })
     return () => listener.subscription.unsubscribe()
   }, [])
+
+  // Refresh balance whenever route changes (after a purchase, refund, etc.)
+  useEffect(() => { if (user) refreshBalance() }, [pathname, user])
 
   useEffect(() => {
     const saved = localStorage.getItem('theme') as 'dark' | 'light' | null
@@ -97,7 +118,7 @@ export default function Nav() {
             </div>
             <div>
               <div className="font-bold text-sm leading-tight" style={{ color: 'var(--text)' }}>PicksVault</div>
-              <div className="text-[9px] font-semibold tracking-[0.18em] uppercase" style={{ color: 'var(--accent)' }}>Stake-backed picks</div>
+              <div className="text-[9px] font-semibold tracking-[0.18em] uppercase" style={{ color: 'var(--accent)' }}>Auto-refunds. Pick Protection.</div>
             </div>
           </Link>
 
@@ -124,12 +145,31 @@ export default function Nav() {
 
           {user ? (
             <>
+              {/* Balance pill + deposit button */}
+              <button
+                onClick={() => setDepositOpen(true)}
+                className="hidden sm:flex items-center gap-2 rounded-lg pl-3 pr-2 py-1.5 text-sm font-medium transition-all"
+                style={{
+                  background: 'rgba(34,197,94,0.08)',
+                  border: '1px solid rgba(34,197,94,0.3)',
+                  color: 'var(--text)',
+                }}
+                title="Tap to deposit"
+              >
+                <Wallet size={13} style={{ color: 'var(--accent)' }} />
+                <span className="stat-num text-sm">${balance == null ? '—' : balance.toFixed(2)}</span>
+                <span className="rounded-md w-6 h-6 flex items-center justify-center" style={{ background: 'var(--accent)', color: '#04130a' }}>
+                  <Plus size={13} strokeWidth={3} />
+                </span>
+              </button>
+
               <Link
                 href="/dashboard"
-                className="hidden sm:flex btn-ghost items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-medium"
+                className="hidden md:flex btn-ghost items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-medium"
               >
                 <LayoutDashboard size={14} />
-                Seller Dashboard
+                <span className="hidden xl:inline">Seller Dashboard</span>
+                <span className="xl:hidden">Dashboard</span>
               </Link>
               <div className="relative">
                 <button
@@ -195,6 +235,14 @@ export default function Nav() {
           )}
         </div>
       </div>
+
+      {depositOpen && (
+        <DepositModal
+          currentBalance={balance ?? 0}
+          onClose={() => setDepositOpen(false)}
+          onSuccess={(newBal) => { setBalance(newBal); setDepositOpen(false) }}
+        />
+      )}
     </nav>
   )
 }

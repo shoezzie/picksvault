@@ -1,21 +1,21 @@
-import { HelpCircle, ShoppingBag, Lock, Activity, RotateCcw, AlertTriangle, Clock, RefreshCw, ShieldOff, Zap } from 'lucide-react'
+import { HelpCircle, ShoppingBag, Shield, Activity, RotateCcw, Wallet, Zap } from 'lucide-react'
 
 const STEPS = [
   {
     num: 1,
-    title: 'Seller stakes real money',
-    desc: 'Every insured pick requires the seller to lock a stake in escrow via Stripe. If they don\'t put up money, they can\'t post an insured pick. Skin in the game is mandatory.',
-    icon: Lock,
+    title: 'Top up your PicksVault balance',
+    desc: 'Deposit any amount into your account. Every pick you buy, every refund you get, every win you collect runs through that one balance. Withdraw to your bank anytime.',
+    icon: Wallet,
     color: '#22c55e',
-    detail: 'Minimum $50 stake per pick. The stake ratio must be at least 5× the pick price.',
+    detail: 'Test mode: deposit instantly. Production: card + ACH via Stripe.',
   },
   {
     num: 2,
-    title: 'You unlock the full pick',
-    desc: 'Pay once to see the full reasoning, best book, recommended odds, and recommended stake size. The encrypted pick is revealed instantly after payment clears.',
-    icon: ShoppingBag,
+    title: 'Buy a pick — add Pick Protection if you want it',
+    desc: 'Every pick has an optional Pick Protection toggle. Pay a small premium and the full pick price is auto-refunded if it loses. Skip protection and you take the pick at face value, like any other tout.',
+    icon: Shield,
     color: '#3b82f6',
-    detail: 'Payment held in escrow until game settles. Powered by Stripe.',
+    detail: 'Premium = 50% of pick price (e.g. $5 pick → $2.50 protection).',
   },
   {
     num: 3,
@@ -27,21 +27,21 @@ const STEPS = [
   },
   {
     num: 4,
-    title: 'Auto-refund if it loses',
-    desc: 'If the pick loses, 95% of your purchase price is automatically refunded within 1 hour. The remaining 5% covers platform fees. No forms, no waiting, no arguing.',
+    title: 'Refund hits your balance instantly',
+    desc: 'If the pick loses and you opted into Pick Protection, the full pick price is back in your balance the moment grading completes. No tickets, no waiting on bank holds — it\'s instant inside PicksVault.',
     icon: RotateCcw,
     color: '#f59e0b',
-    detail: '5% fee covers payment processing and platform operations.',
+    detail: 'Refunds funded by the protection pool — not by sellers.',
   },
 ]
 
 const EDGE_CASES = [
-  { icon: '⏰', title: 'Game postponed', desc: 'Full refund issued automatically. No fees.' },
-  { icon: '🤕', title: 'Player scratched before game', desc: 'Void pick. Full refund, same day.' },
-  { icon: '🌧️', title: 'Rain delay / suspended game', desc: 'If game doesn\'t complete, void + refund.' },
-  { icon: '⚡', title: 'Tie / push result', desc: 'Depends on pick type. Most pushes = full refund.' },
-  { icon: '🔧', title: 'Data error in grading', desc: 'Manual review within 24h. Buyer always gets benefit of doubt.' },
-  { icon: '💸', title: 'Seller balance goes negative', desc: 'Seller account frozen. Refunds processed from reserve.' },
+  { icon: '⏰', title: 'Game postponed', desc: 'Full refund issued automatically — including any Pick Protection premium.' },
+  { icon: '🤕', title: 'Player scratched before game', desc: 'Void pick. Full refund (price + premium) credited instantly.' },
+  { icon: '🌧️', title: 'Rain delay / suspended game', desc: 'If game doesn\'t complete, the pick voids and you get a full refund.' },
+  { icon: '⚡', title: 'Tie / push result', desc: 'Treated as a void. Pick price refunded; premium is kept for protected picks.' },
+  { icon: '🔧', title: 'Data error in grading', desc: 'Manual review within 24h. Buyer always gets the benefit of the doubt.' },
+  { icon: '🛡️', title: 'Protection pool runs low', desc: 'Premium pricing flexes up automatically to keep the pool solvent. Existing refunds always pay out.' },
 ]
 
 export default function HowPage() {
@@ -55,8 +55,7 @@ export default function HowPage() {
         </div>
         <h1 className="text-4xl font-bold mb-3" style={{ color: 'var(--text)' }}>How PicksVault works</h1>
         <p className="text-base max-w-xl mx-auto" style={{ color: 'var(--muted)' }}>
-          A marketplace where sellers must put their own money on the line.
-          If the pick loses, you get most of your money back. Automatically.
+          One PicksVault balance. Every pick comes with optional Pick Protection — opt in, get auto-refunded if the pick loses. No paperwork, no waiting.
         </p>
       </div>
 
@@ -78,16 +77,16 @@ export default function HowPage() {
 
       {/* Why this works */}
       <div className="card rounded-2xl p-8 mb-10 text-center" style={{ borderColor: 'rgba(34,197,94,0.25)' }}>
-        <div className="text-4xl mb-4">🔒</div>
+        <div className="text-4xl mb-4">🛡️</div>
         <h2 className="text-2xl font-bold mb-3" style={{ color: 'var(--text)' }}>Why this works</h2>
         <p className="text-sm leading-relaxed max-w-lg mx-auto mb-6" style={{ color: 'var(--muted)' }}>
-          Traditional picks services have no accountability — they can cherry-pick results, hide losses, and sell snake oil. PicksVault flips the model: every pick has real money behind it. Bad picks cost sellers real money. Good sellers build real track records on-chain.
+          Traditional picks services have zero accountability — cherry-picked results, hidden losses, no recourse. PicksVault gives you opt-in protection: every pick comes with the option to get refunded if it doesn\'t hit. The pool funds the refunds, not the seller — so you never have to trust a stranger\'s balance.
         </p>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-left">
           {[
-            { icon: '🎯', title: 'Aligned incentives', desc: 'Sellers only make money if picks win. Bad picks hurt their wallet.' },
-            { icon: '📊', title: 'Verifiable records', desc: 'All pick results are on-chain and publicly auditable.' },
-            { icon: '🛡️', title: 'Buyer protection', desc: 'You\'re never fully exposed. Auto-refunds are instant and automatic.' },
+            { icon: '🎯', title: 'Verified results', desc: 'Auto-graded by official box scores. Every pick result is recorded and public.' },
+            { icon: '🛡️', title: 'Pick Protection', desc: 'Add it at checkout. Pick loses → instant refund. Pool-funded, never delayed.' },
+            { icon: '⚡', title: 'Instant refunds', desc: 'No support tickets. Money lands in your balance the second the game settles.' },
           ].map(item => (
             <div key={item.title} className="p-4 rounded-xl" style={{ background: 'rgba(34,197,94,0.05)', border: '1px solid rgba(34,197,94,0.15)' }}>
               <div className="text-2xl mb-2">{item.icon}</div>
