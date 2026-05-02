@@ -114,7 +114,10 @@ export default function MarketplacePage() {
         </div>
 
         <div className="flex items-center justify-center gap-3 flex-wrap">
-          <button className="btn-primary px-6 py-3 rounded-xl font-semibold flex items-center gap-2">
+          <button
+            onClick={() => document.getElementById('picks-grid')?.scrollIntoView({ behavior: 'smooth', block: 'start' })}
+            className="btn-primary px-6 py-3 rounded-xl font-semibold flex items-center gap-2"
+          >
             <TrendingUp size={16} />
             Browse picks
           </button>
@@ -138,7 +141,7 @@ export default function MarketplacePage() {
           <div className="font-semibold text-sm" style={{ color: 'var(--text)' }}>🎁 First pick is free — no credit card needed</div>
           <div className="text-xs mt-0.5" style={{ color: 'var(--muted)' }}>Try any insured pick on us. If it loses, you get 100% back.</div>
         </div>
-        <button className="btn-primary px-4 py-2 rounded-lg text-sm font-semibold flex-shrink-0">Claim offer</button>
+        <a href="/auth/signup" className="btn-primary px-4 py-2 rounded-lg text-sm font-semibold flex-shrink-0">Claim offer</a>
       </div>
 
       {/* Live activity ticker */}
@@ -172,7 +175,7 @@ export default function MarketplacePage() {
               key={f}
               onClick={() => setFilter(f)}
               className={`btn-ghost px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition-all ${filter === f ? 'filter-active' : ''}`}
-              style={{ color: filter === f ? '#04130a' : 'var(--muted)' }}
+              style={{ color: filter === f ? '#04130a' : 'var(--text)' }}
             >
               {f === 'Following' && (
                 <span className="nav-count mr-1">{following.size}</span>
@@ -219,7 +222,7 @@ export default function MarketplacePage() {
           </button>
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 mb-14">
+        <div id="picks-grid" className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 mb-14">
           {sortedPicks.map(pick => (
             <PickCard
               key={pick.id}

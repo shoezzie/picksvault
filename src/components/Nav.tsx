@@ -49,11 +49,10 @@ export default function Nav() {
   useEffect(() => { if (user) refreshBalance() }, [pathname, user])
 
   useEffect(() => {
-    const saved = localStorage.getItem('theme') as 'dark' | 'light' | null
-    if (saved) {
-      setTheme(saved)
-      document.documentElement.setAttribute('data-theme', saved)
-    }
+    // Default to dark; respect saved preference if present
+    const saved = (localStorage.getItem('theme') as 'dark' | 'light' | null) ?? 'dark'
+    setTheme(saved)
+    document.documentElement.setAttribute('data-theme', saved)
   }, [])
 
   function toggleTheme() {
@@ -78,7 +77,7 @@ export default function Nav() {
   ]
 
   return (
-    <nav className="border-b sticky top-0 z-40 backdrop-blur" style={{ borderColor: 'var(--border)', backgroundColor: 'rgba(7,8,10,0.95)' }}>
+    <nav className="border-b sticky top-0 z-40 backdrop-blur pv-nav" style={{ borderColor: 'var(--border)' }}>
       <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
         {/* Logo */}
         <div className="flex items-center gap-8">

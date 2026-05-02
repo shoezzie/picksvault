@@ -494,3 +494,122 @@ input:focus, select:focus, textarea:focus { outline: none; border-color: var(--a
 .pick-card:hover .gradient-nfl,
 .pick-card:hover .gradient-nhl { filter: brightness(1.08) saturate(1.1); }
 .gradient-mlb, .gradient-nba, .gradient-nfl, .gradient-nhl { transition: filter .3s; }
+
+/* ═══════════════════════════════════════════════════════════════
+   THEME-AWARE NAV + COMPREHENSIVE LIGHT-MODE TAILWIND OVERRIDES
+   ═══════════════════════════════════════════════════════════════ */
+
+/* Nav background (theme-aware) */
+.pv-nav { background-color: rgba(7,8,10,0.95); }
+[data-theme="light"] .pv-nav { background-color: rgba(247,246,241,0.92); }
+
+/* User avatar (theme-aware) */
+.user-avatar {
+  width: 24px; height: 24px; border-radius: 50%;
+  background: linear-gradient(135deg, #22c55e, #3b82f6);
+  display: inline-flex; align-items: center; justify-content: center;
+  color: #04130a; font-size: 11px; font-weight: 800; flex-shrink: 0;
+}
+
+/* Nav links (theme-aware) */
+.nav-link { padding: 8px 12px; border-radius: 8px; color: var(--muted); white-space: nowrap; transition: all .15s ease; display: inline-flex; align-items: center; gap: 6px; line-height: 1; }
+.nav-link:hover { color: var(--text); background: rgba(255,255,255,0.04); }
+[data-theme="light"] .nav-link { color: #4b5563; }
+[data-theme="light"] .nav-link:hover { color: #0b0c10; background: rgba(15,23,42,0.05); }
+.nav-count { display: inline-flex; align-items: center; justify-content: center; min-width: 18px; height: 18px; padding: 0 5px; border-radius: 9999px; background: rgba(34,197,94,0.15); color: var(--accent); font-size: 10px; font-weight: 700; font-family: 'JetBrains Mono', monospace; line-height: 1; }
+
+/* Tab styles (theme-aware) */
+.tab-active { color: var(--text); border-bottom: 2px solid var(--accent); }
+.tab-inactive { color: var(--muted); border-bottom: 2px solid transparent; }
+.tab-inactive:hover { color: var(--text); }
+
+/* Dropdowns / panels (theme-aware) */
+.card-panel { background: var(--panel); border: 1px solid var(--border); }
+
+/* ──── TAILWIND UTILITY OVERRIDES IN LIGHT MODE ──── */
+[data-theme="light"] .text-white { color: #0b0c10 !important; }
+[data-theme="light"] .text-white\/55 { color: rgba(11,12,16,0.55) !important; }
+[data-theme="light"] .text-white\/70 { color: rgba(11,12,16,0.7) !important; }
+[data-theme="light"] .text-white\/80 { color: rgba(11,12,16,0.8) !important; }
+[data-theme="light"] .text-zinc-200 { color: #475569 !important; }
+[data-theme="light"] .text-zinc-300 { color: #475569 !important; }
+[data-theme="light"] .text-zinc-400 { color: #5b6271 !important; }
+[data-theme="light"] .text-zinc-500 { color: #6b7280 !important; }
+[data-theme="light"] .text-zinc-600 { color: #4b5563 !important; }
+[data-theme="light"] .hover\:text-white:hover { color: #0b0c10 !important; }
+[data-theme="light"] .text-muted { color: var(--muted) !important; }
+[data-theme="light"] .border-border { border-color: var(--border) !important; }
+[data-theme="light"] .bg-bg { background-color: var(--bg) !important; }
+[data-theme="light"] .bg-panel { background-color: var(--panel) !important; }
+[data-theme="light"] .bg-panel2 { background-color: var(--panel2) !important; }
+[data-theme="light"] .bg-bg\/95 { background-color: rgba(247,246,241,0.92) !important; }
+[data-theme="light"] .bg-bg\/50 { background-color: rgba(247,246,241,0.6) !important; }
+[data-theme="light"] .bg-panel\/50 { background-color: rgba(255,255,255,0.6) !important; }
+[data-theme="light"] .hover\:bg-white\/\[0\.02\]:hover { background-color: rgba(15,23,42,0.03) !important; }
+[data-theme="light"] .hover\:bg-white\/5:hover { background-color: rgba(15,23,42,0.05) !important; }
+[data-theme="light"] .hover\:bg-white\/10:hover { background-color: rgba(15,23,42,0.08) !important; }
+
+/* Auth pages are mostly Tailwind classes — make them readable in light */
+[data-theme="light"] .text-gradient-accent {
+  background: linear-gradient(180deg, #16a34a 0%, #15803d 100%);
+  -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent;
+}
+
+/* Stat-tile-value uses var(--text) so it's already theme-aware. But .text-zinc-300 used
+   as decorative text on dark gradient banners (sport gradients) should NOT be overridden.
+   The sport-gradient banners stay dark even in light mode, so we scope the overrides to
+   exclude direct children of .gradient-mlb/etc. — but Tailwind specificity makes that hard.
+   The cleanest approach: use [class*=gradient-] :is(.text-white) override below to
+   restore white on banners specifically. */
+[data-theme="light"] .gradient-mlb .text-white,
+[data-theme="light"] .gradient-nba .text-white,
+[data-theme="light"] .gradient-nfl .text-white,
+[data-theme="light"] .gradient-nhl .text-white,
+[data-theme="light"] .gradient-soccer .text-white,
+[data-theme="light"] .grading-hero .text-white { color: #ffffff !important; }
+[data-theme="light"] .gradient-mlb .text-zinc-200,
+[data-theme="light"] .gradient-mlb .text-zinc-300,
+[data-theme="light"] .gradient-mlb .text-zinc-400,
+[data-theme="light"] .gradient-nba .text-zinc-200,
+[data-theme="light"] .gradient-nba .text-zinc-300,
+[data-theme="light"] .gradient-nba .text-zinc-400,
+[data-theme="light"] .gradient-nfl .text-zinc-200,
+[data-theme="light"] .gradient-nfl .text-zinc-300,
+[data-theme="light"] .gradient-nfl .text-zinc-400,
+[data-theme="light"] .gradient-nhl .text-zinc-200,
+[data-theme="light"] .gradient-nhl .text-zinc-300,
+[data-theme="light"] .gradient-nhl .text-zinc-400,
+[data-theme="light"] .grading-hero .text-zinc-200,
+[data-theme="light"] .grading-hero .text-zinc-300,
+[data-theme="light"] .grading-hero .text-zinc-400 { color: rgba(255,255,255,0.85) !important; }
+
+/* Section hero grid lines visible on light */
+[data-theme="light"] .section-hero::before {
+  background-image:
+    linear-gradient(to right, rgba(15,23,42,0.05) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(15,23,42,0.05) 1px, transparent 1px);
+}
+
+/* Mesh hero grid lines visible on light */
+[data-theme="light"] .mesh-hero::before {
+  background:
+    radial-gradient(circle at 20% 20%, rgba(34,197,94,0.20), transparent 40%),
+    radial-gradient(circle at 80% 30%, rgba(59,130,246,0.14), transparent 45%),
+    radial-gradient(circle at 50% 80%, rgba(168,85,247,0.12), transparent 40%);
+}
+[data-theme="light"] .mesh-hero::after {
+  background-image:
+    linear-gradient(to right, rgba(15,23,42,0.05) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(15,23,42,0.05) 1px, transparent 1px);
+}
+
+/* Body grid lines */
+[data-theme="light"] body::before {
+  background-image:
+    linear-gradient(to right, rgba(15,23,42,0.04) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(15,23,42,0.04) 1px, transparent 1px);
+}
+
+/* Result-card progress bg */
+[data-theme="light"] .rc-progress { background: rgba(15,23,42,0.06); }
+[data-theme="light"] .skeleton-bar { background: linear-gradient(90deg, rgba(15,23,42,0.04) 0%, rgba(15,23,42,0.10) 50%, rgba(15,23,42,0.04) 100%); }
