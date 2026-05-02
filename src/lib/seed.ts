@@ -60,18 +60,18 @@ async function seed() {
 
     if (!uid) continue
 
-    // Upsert profile
+    // Upsert profile (with seed earnings on the new balance system)
     await supabase.from('profiles').upsert({
       id: uid,
       username,
       role: 'seller',
       avatar_letter: seller.avatar,
+      available_balance: seller.stakeBalance ?? 0,
     }, { onConflict: 'id' })
 
-    // Upsert seller profile
+    // Upsert seller profile (no longer using stake_balance)
     await supabase.from('seller_profiles').upsert({
       id: uid,
-      stake_balance: seller.stakeBalance,
       hit_rate: parseFloat(seller.hit),
       roi: parseFloat(seller.roi.replace('+', '')),
       total_picks: seller.picks,
@@ -93,7 +93,7 @@ async function seed() {
         game: pick.game,
         lock_time: lockTime.toISOString(),
         price: pick.price,
-        stake: pick.stake,
+        stake: 0, // legacy column — required not-null until next migration
         tier: pick.tier,
         description: pick.description,
         reasoning: pick.reasoning,

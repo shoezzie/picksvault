@@ -72,7 +72,7 @@ export default function MarketplacePage() {
     if (sortBy === 'price-asc') return a.price - b.price
     if (sortBy === 'price-desc') return b.price - a.price
     if (sortBy === 'roi') return parseFloat(b.roi) - parseFloat(a.roi)
-    if (sortBy === 'stake') return (b.stake ?? 0) - (a.stake ?? 0)
+    if (sortBy === 'buyers') return (b.buyers ?? 0) - (a.buyers ?? 0)
     return b.id - a.id
   })
 
@@ -83,15 +83,15 @@ export default function MarketplacePage() {
         <div className="flex items-center justify-center gap-2 mb-4">
           <div className="live-dot live-dot-green" />
           <span className="text-xs font-semibold uppercase tracking-[0.2em]" style={{ color: 'var(--accent)' }}>
-            Stake-backed picks marketplace
+            Picks marketplace · auto-refunds
           </span>
         </div>
         <h1 className="text-5xl md:text-6xl font-bold mb-4 text-gradient">
-          Picks with skin<br />in the game.
+          Picks with a refund<br />if they don&apos;t hit.
         </h1>
         <p className="text-lg max-w-xl mx-auto mb-8" style={{ color: 'var(--muted)' }}>
-          Sellers stake real money on every pick. You unlock the full analysis.
-          If the pick loses — <span style={{ color: 'var(--accent)' }}>auto-refund, no questions asked.</span>
+          Buy any pick, add Pick Protection at checkout. If it loses —
+          <span style={{ color: 'var(--accent)' }}> the price is back in your balance, instantly.</span>
         </p>
 
         <div className="flex flex-wrap items-center justify-center gap-8 mb-8">
@@ -193,7 +193,7 @@ export default function MarketplacePage() {
             <option value="price-asc">Price: Low to High</option>
             <option value="price-desc">Price: High to Low</option>
             <option value="roi">Best ROI</option>
-            <option value="stake">Highest Stake</option>
+            <option value="buyers">Most Buyers</option>
           </select>
         </div>
       </div>
@@ -250,10 +250,10 @@ export default function MarketplacePage() {
 
       {/* How it works teaser */}
       <div className="rounded-2xl p-8 text-center mb-8" style={{ background: 'linear-gradient(135deg, rgba(34,197,94,0.08), rgba(59,130,246,0.05))', border: '1px solid rgba(34,197,94,0.2)' }}>
-        <div className="text-3xl mb-3">🔒</div>
-        <h3 className="text-xl font-bold mb-2" style={{ color: 'var(--text)' }}>How the insurance works</h3>
+        <div className="text-3xl mb-3">🛡️</div>
+        <h3 className="text-xl font-bold mb-2" style={{ color: 'var(--text)' }}>How Pick Protection works</h3>
         <p className="text-sm max-w-md mx-auto mb-4" style={{ color: 'var(--muted)' }}>
-          Every insured pick has a seller stake locked in escrow. If the pick loses, 95% of your purchase price is automatically refunded within 1 hour.
+          Toggle Pick Protection at checkout. If your pick loses, the price is refunded to your balance instantly — funded by a marketplace-wide protection pool.
         </p>
         <a href="/how" className="btn-primary px-6 py-2.5 rounded-xl text-sm font-semibold inline-flex items-center gap-2">
           <Zap size={14} />Learn more

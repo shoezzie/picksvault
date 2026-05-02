@@ -6,7 +6,7 @@ import { useState, useEffect } from 'react'
 import {
   BarChart2, Bookmark, Trophy, Activity, HelpCircle,
   Sun, Moon, LogOut, LayoutDashboard, ChevronDown,
-  ShoppingBag, Wallet, Plus
+  ShoppingBag, Wallet, Plus, Receipt
 } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import type { User } from '@supabase/supabase-js'
@@ -203,6 +203,15 @@ export default function Nav() {
                     >
                       <Bookmark size={14} />
                       Bookmarks
+                    </Link>
+                    <Link
+                      href="/transactions"
+                      className="flex items-center gap-2 px-4 py-2 text-sm hover:bg-white/5"
+                      style={{ color: 'var(--text)' }}
+                      onClick={() => setMenuOpen(false)}
+                    >
+                      <Receipt size={14} />
+                      Transactions
                     </Link>
                     <hr style={{ borderColor: 'var(--border)' }} className="my-1" />
                     <button

@@ -11,7 +11,7 @@ export async function GET(request: NextRequest, context: { params: Promise<{ id:
 
     const { data: pick, error } = await supabase
       .from('picks')
-      .select(`*, seller:profiles(id, username, avatar_letter, seller_profiles(hit_rate, roi, verified, badge, stake_balance))`)
+      .select(`*, seller:profiles(id, username, avatar_letter, seller_profiles(hit_rate, roi, verified, badge))`)
       .eq('id', id)
       .single()
 

@@ -88,10 +88,10 @@ export default function PickDetailPage() {
                 <div className="stat-num text-lg">{pick.buyers}</div>
                 <div className="text-[10px] uppercase" style={{ color: 'var(--muted)' }}>Buyers</div>
               </div>
-              <div className="text-center p-3 rounded-xl" style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid var(--border)' }}>
+              <div className="text-center p-3 rounded-xl" style={{ background: 'rgba(34,197,94,0.06)', border: '1px solid rgba(34,197,94,0.25)' }}>
                 <div className="flex items-center justify-center mb-1"><Shield size={16} style={{ color: 'var(--accent)' }} /></div>
-                <div className="stat-num text-lg">${pick.stake}</div>
-                <div className="text-[10px] uppercase" style={{ color: 'var(--muted)' }}>Stake</div>
+                <div className="stat-num text-lg" style={{ color: 'var(--accent)' }}>Available</div>
+                <div className="text-[10px] uppercase" style={{ color: 'var(--muted)' }}>Pick Protection</div>
               </div>
               <div className="text-center p-3 rounded-xl" style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid var(--border)' }}>
                 <div className="flex items-center justify-center mb-1"><Signal size={16} style={{ color: 'var(--accent)' }} /></div>
@@ -201,18 +201,21 @@ export default function PickDetailPage() {
 
             <div className="text-4xl font-bold stat-num mb-1" style={{ color: 'var(--text)' }}>${pick.price}</div>
             <div className="text-xs mb-4" style={{ color: 'var(--muted)' }}>
-              {pick.tier === 'insured' ? `95% refund if loses = $${(pick.price * 0.95).toFixed(2)} back` : 'No refund guarantee'}
+              {pick.tier === 'insured' ? (
+                <>Add Pick Protection at checkout for <span style={{ color: 'var(--accent)' }}>full refund if it loses</span></>
+              ) : 'No refund guarantee available'}
             </div>
 
-            {/* Stake bar */}
+            {/* Pick Protection availability */}
             {pick.tier === 'insured' && (
-              <div className="mb-4">
-                <div className="flex items-center justify-between mb-1">
-                  <span className="text-[10px]" style={{ color: 'var(--muted)' }}>Seller stake locked</span>
-                  <span className="stake-pill">${pick.stake}</span>
-                </div>
-                <div className="stake-bar">
-                  <div className="stake-bar-fill" style={{ width: `${Math.min((pick.stake / 250) * 100, 100)}%` }} />
+              <div className="mb-4 rounded-md p-2.5" style={{ background: 'rgba(34,197,94,0.06)', border: '1px solid rgba(34,197,94,0.25)' }}>
+                <div className="flex items-center justify-between gap-2">
+                  <span className="text-[10px] flex items-center gap-1.5" style={{ color: 'var(--muted)' }}>
+                    <Shield size={11} style={{ color: 'var(--accent)' }} />Pick Protection
+                  </span>
+                  <span className="text-[10px] font-mono" style={{ color: 'var(--accent)' }}>
+                    +${Math.max(1, Math.round(pick.price * 0.5 * 100) / 100).toFixed(2)} at checkout
+                  </span>
                 </div>
               </div>
             )}

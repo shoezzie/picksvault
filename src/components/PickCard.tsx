@@ -240,17 +240,17 @@ export default function PickCard({ pick, isBookmarked, onBookmarkToggle, onUnloc
           </div>
         )}
 
-        {/* Stake bar */}
-        {isInsured && pick.stake && (
+        {/* Pick Protection availability */}
+        {isInsured && (
           <div className="mb-3">
-            <div className="flex items-center justify-between mb-1">
-              <span className="text-[10px]" style={{ color: 'var(--muted)' }}>Seller stake</span>
-              <span className="stake-pill">
-                <Lock size={10} />${pick.stake}
+            <div className="flex items-center justify-between gap-2 rounded-md p-2" style={{ background: 'rgba(34,197,94,0.06)', border: '1px solid rgba(34,197,94,0.2)' }}>
+              <span className="text-[10px] flex items-center gap-1.5" style={{ color: 'var(--muted)' }}>
+                <Lock size={10} style={{ color: 'var(--accent)' }} />
+                Pick Protection
               </span>
-            </div>
-            <div className="stake-bar">
-              <div className="stake-bar-fill" style={{ width: `${Math.min((pick.stake / 250) * 100, 100)}%` }} />
+              <span className="text-[10px] font-mono" style={{ color: 'var(--accent)' }}>
+                Refund if it loses
+              </span>
             </div>
           </div>
         )}
