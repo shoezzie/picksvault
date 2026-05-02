@@ -1,0 +1,2883 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>PicksVault — Sports Picks Marketplace</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://unpkg.com/lucide@latest"></script>
+<script>
+  tailwind.config = {
+    theme: {
+      extend: {
+        colors: {
+          bg: '#0a0a0b',
+          panel: '#111114',
+          panel2: '#1a1a1f',
+          border: '#26262d',
+          accent: '#22c55e',
+          accent2: '#16a34a',
+          danger: '#ef4444',
+          muted: '#71717a',
+        },
+        fontFamily: {
+          sans: ['Inter', 'system-ui', 'sans-serif'],
+          mono: ['JetBrains Mono', 'monospace'],
+        }
+      }
+    }
+  }
+</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #07080a;
+    --panel: #0d0e12;
+    --panel2: #14161c;
+    --border: rgba(255,255,255,0.06);
+    --border-hover: rgba(255,255,255,0.12);
+    --accent: #22c55e;
+    --accent-glow: rgba(34,197,94,0.5);
+    --text: #fafafa;
+    --muted: #6b7280;
+  }
+  * { -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; }
+  html, body { background: var(--bg); color: var(--text); font-family: 'Inter', sans-serif; }
+  body {
+    background-image:
+      radial-gradient(at 12% 8%, rgba(34,197,94,0.08) 0px, transparent 45%),
+      radial-gradient(at 88% 4%, rgba(59,130,246,0.05) 0px, transparent 50%),
+      linear-gradient(to bottom, #07080a 0%, #07080a 100%);
+    background-attachment: fixed;
+    letter-spacing: -0.011em;
+  }
+  body::before {
+    content: ''; position: fixed; inset: 0; pointer-events: none; z-index: 0;
+    background-image:
+      linear-gradient(to right, rgba(255,255,255,0.012) 1px, transparent 1px),
+      linear-gradient(to bottom, rgba(255,255,255,0.012) 1px, transparent 1px);
+    background-size: 64px 64px;
+    mask-image: radial-gradient(ellipse 80% 60% at 50% 30%, black 30%, transparent 80%);
+  }
+  /* Lucide icon defaults */
+  [data-lucide] { width: 16px; height: 16px; stroke-width: 2; flex-shrink: 0; }
+  .icon-sm [data-lucide] { width: 12px; height: 12px; }
+  .icon-md [data-lucide] { width: 18px; height: 18px; }
+  .icon-lg [data-lucide] { width: 22px; height: 22px; }
+  .icon-xl [data-lucide] { width: 32px; height: 32px; }
+  .icon-2xl [data-lucide] { width: 56px; height: 56px; }
+
+  /* Layered surfaces */
+  .glass { background: linear-gradient(180deg, rgba(255,255,255,0.03), rgba(255,255,255,0.005)); backdrop-filter: blur(14px); border: 1px solid var(--border); box-shadow: inset 0 1px 0 rgba(255,255,255,0.04), 0 1px 0 rgba(0,0,0,0.4); }
+  .glass:hover { border-color: var(--border-hover); }
+  .card { background: linear-gradient(180deg, #0e1015, #0a0b0e); border: 1px solid var(--border); border-radius: 14px; box-shadow: inset 0 1px 0 rgba(255,255,255,0.04); transition: all .2s cubic-bezier(.4,0,.2,1); }
+  .card:hover { border-color: var(--border-hover); }
+  .glow { box-shadow: 0 0 0 1px rgba(34,197,94,0.4), 0 0 32px rgba(34,197,94,0.18), inset 0 0 32px rgba(34,197,94,0.04); }
+  .glow-soft { box-shadow: 0 0 80px -20px rgba(34,197,94,0.3); }
+
+  /* Buttons */
+  .btn-primary { background: linear-gradient(180deg, #2dd47a, #16a34a); color: #04130a; font-weight: 700; box-shadow: 0 0 0 1px rgba(34,197,94,0.5), 0 1px 0 rgba(255,255,255,0.2) inset, 0 8px 24px -8px rgba(34,197,94,0.6); transition: all .15s ease; letter-spacing: -0.01em; }
+  .btn-primary:hover { transform: translateY(-1px); box-shadow: 0 0 0 1px rgba(34,197,94,0.7), 0 1px 0 rgba(255,255,255,0.3) inset, 0 12px 32px -8px rgba(34,197,94,0.8); }
+  .btn-primary:active { transform: translateY(0); }
+  .btn-ghost { border: 1px solid var(--border); background: rgba(255,255,255,0.02); transition: all .15s ease; backdrop-filter: blur(8px); }
+  .btn-ghost:hover { border-color: var(--border-hover); background: rgba(255,255,255,0.04); }
+
+  /* Pills */
+  .pill { font-size: 10.5px; padding: 4px 9px; border-radius: 999px; font-weight: 600; letter-spacing: 0.02em; display: inline-flex; align-items: center; gap: 4px; line-height: 1; }
+  .pill-mono { font-family: 'JetBrains Mono', monospace; font-size: 10.5px; padding: 4px 9px; border-radius: 6px; font-weight: 600; letter-spacing: 0.02em; display: inline-flex; align-items: center; gap: 4px; }
+
+  /* Signal badges */
+  .signal, .signal-badge { display: inline-flex; align-items: center; gap: 4px; padding: 3px 8px; border-radius: 999px; font-size: 10px; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase; line-height: 1; }
+  .signal-badge [data-lucide] { width: 11px; height: 11px; stroke-width: 2.5; }
+
+  /* Odds pill */
+  .odds-pill { display:inline-flex; align-items:center; padding: 5px 10px; border-radius: 8px; background: linear-gradient(180deg, rgba(255,255,255,0.04), rgba(255,255,255,0.01)); border: 1px solid var(--border); box-shadow: inset 0 1px 0 rgba(255,255,255,0.04); }
+
+  /* Lock cube */
+  .lock-cube { width: 44px; height: 44px; border-radius: 10px; background: linear-gradient(135deg, rgba(0,0,0,0.5), rgba(0,0,0,0.2)); backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.12); display:flex; align-items:center; justify-content:center; color: rgba(255,255,255,0.95); box-shadow: inset 0 1px 0 rgba(255,255,255,0.12), 0 8px 24px -8px rgba(0,0,0,0.6); }
+  .signal-hot { background: rgba(239,68,68,0.12); color: #fca5a5; border: 1px solid rgba(239,68,68,0.3); box-shadow: 0 0 16px rgba(239,68,68,0.15); }
+  .signal-sharp { background: rgba(34,197,94,0.12); color: #86efac; border: 1px solid rgba(34,197,94,0.3); }
+  .signal-fresh { background: rgba(250,204,21,0.12); color: #fde047; border: 1px solid rgba(250,204,21,0.3); }
+  .signal-pocket { background: rgba(168,85,247,0.12); color: #d8b4fe; border: 1px solid rgba(168,85,247,0.3); }
+  .signal-fade { background: rgba(59,130,246,0.12); color: #93c5fd; border: 1px solid rgba(59,130,246,0.3); }
+  .signal [data-lucide] { width: 11px; height: 11px; stroke-width: 2.5; }
+
+  /* Tabs */
+  .tab-active { color: var(--text); border-bottom: 2px solid var(--accent); }
+  .tab-inactive { color: var(--muted); border-bottom: 2px solid transparent; }
+
+  /* View toggling */
+  .view { display: none; position: relative; z-index: 1; }
+  .view.active { display: block; }
+
+  /* Skeletons */
+  .skeleton-bar { background: linear-gradient(90deg, rgba(255,255,255,0.04) 0%, rgba(255,255,255,0.08) 50%, rgba(255,255,255,0.04) 100%); background-size: 200% 100%; animation: shimmer 2s infinite; border-radius: 4px; }
+  @keyframes shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
+
+  /* Modal */
+  .modal-bg { background: rgba(0,0,0,0.78); backdrop-filter: blur(8px); }
+
+  /* Form controls */
+  input, select, textarea { background: rgba(255,255,255,0.03); border: 1px solid var(--border); color: var(--text); border-radius: 8px; transition: border-color .15s ease; }
+  input:focus, select:focus, textarea:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px rgba(34,197,94,0.15); }
+
+  .stat-num { font-family: 'JetBrains Mono', monospace; font-weight: 600; font-feature-settings: 'tnum'; letter-spacing: -0.01em; }
+
+  /* Animations */
+  @keyframes pop { 0% { transform: scale(0.3); opacity: 0; } 60% { transform: scale(1.15); } 100% { transform: scale(1); opacity: 1; } }
+  @keyframes shake { 0%,100% { transform: translateX(0); } 20% { transform: translateX(-6px); } 40% { transform: translateX(6px); } 60% { transform: translateX(-4px); } 80% { transform: translateX(4px); } }
+  @keyframes confetti-fall { to { transform: translateY(120vh) rotate(720deg); opacity: 0; } }
+  @keyframes ticker-scroll { from { transform: translateX(0); } to { transform: translateX(-50%); } }
+  @keyframes pulse-glow { 0%,100% { box-shadow: 0 0 0 0 rgba(34,197,94,0.4); } 50% { box-shadow: 0 0 0 6px rgba(34,197,94,0); } }
+  @keyframes mesh-shift { 0%,100% { transform: translate(0,0) scale(1); } 33% { transform: translate(2%, -1%) scale(1.05); } 66% { transform: translate(-1%, 2%) scale(0.98); } }
+  @keyframes scan { 0% { transform: translateY(-100%); } 100% { transform: translateY(200%); } }
+  @keyframes float { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-6px); } }
+  @keyframes glint { 0% { transform: translateX(-200%) skewX(-12deg); } 100% { transform: translateX(400%) skewX(-12deg); } }
+  @keyframes ring-pulse { 0% { transform: scale(0.95); opacity: 0.7; } 100% { transform: scale(1.4); opacity: 0; } }
+  .ticker-track { animation: ticker-scroll 50s linear infinite; }
+  .pop-anim { animation: pop 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) forwards; }
+  .shake-anim { animation: shake 0.6s ease-out; }
+  .pulse-glow { animation: pulse-glow 2s infinite; }
+  .float-anim { animation: float 4s ease-in-out infinite; }
+  .progress-anim { animation: pulse 1.6s ease-in-out infinite; }
+  @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.5; } }
+  .confetti { position: fixed; width: 8px; height: 14px; top: -20px; pointer-events: none; z-index: 100; animation: confetti-fall 2.4s ease-out forwards; }
+
+  /* Mesh hero */
+  .mesh-hero { position: relative; isolation: isolate; }
+  .mesh-hero::before {
+    content: ''; position: absolute; inset: -10%; z-index: -1;
+    background:
+      radial-gradient(circle at 20% 20%, rgba(34,197,94,0.18), transparent 40%),
+      radial-gradient(circle at 80% 30%, rgba(59,130,246,0.12), transparent 45%),
+      radial-gradient(circle at 50% 80%, rgba(168,85,247,0.1), transparent 40%);
+    filter: blur(40px);
+    animation: mesh-shift 18s ease-in-out infinite;
+  }
+  .mesh-hero::after {
+    content: ''; position: absolute; inset: 0; z-index: -1; pointer-events: none;
+    background-image:
+      linear-gradient(to right, rgba(255,255,255,0.025) 1px, transparent 1px),
+      linear-gradient(to bottom, rgba(255,255,255,0.025) 1px, transparent 1px);
+    background-size: 80px 80px;
+    mask-image: radial-gradient(ellipse 80% 70% at 50% 50%, black 20%, transparent 70%);
+  }
+  .text-gradient { background: linear-gradient(180deg, #fafafa 0%, #a1a1aa 100%); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; }
+  .text-gradient-accent { background: linear-gradient(180deg, #4ade80 0%, #16a34a 100%); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; }
+
+  /* Sport gradients with depth */
+  .gradient-mlb { background: linear-gradient(135deg, #1e3a8a 0%, #1e40af 50%, #0c4a6e 100%); position: relative; }
+  .gradient-nba { background: linear-gradient(135deg, #9a3412 0%, #ea580c 50%, #7c2d12 100%); position: relative; }
+  .gradient-nfl { background: linear-gradient(135deg, #14532d 0%, #166534 50%, #052e16 100%); position: relative; }
+  .gradient-nhl { background: linear-gradient(135deg, #0c4a6e 0%, #0369a1 50%, #082f49 100%); position: relative; }
+  .gradient-soccer { background: linear-gradient(135deg, #5b21b6 0%, #7c3aed 50%, #2e1065 100%); position: relative; }
+  .gradient-mlb::after, .gradient-nba::after, .gradient-nfl::after, .gradient-nhl::after, .gradient-soccer::after {
+    content:''; position:absolute; inset:0; background:
+      radial-gradient(ellipse 100% 60% at 50% 0%, rgba(255,255,255,0.15), transparent 70%),
+      radial-gradient(circle at 100% 100%, rgba(0,0,0,0.6), transparent 60%);
+    pointer-events: none;
+  }
+
+  /* Pick card */
+  .pick-card { background: linear-gradient(180deg, #0d0e12 0%, #08090b 100%); border: 1px solid var(--border); border-radius: 16px; overflow: hidden; transition: all .25s cubic-bezier(.4,0,.2,1); position: relative; box-shadow: inset 0 1px 0 rgba(255,255,255,0.04); }
+  .pick-card::before { content:''; position:absolute; inset:0; border-radius: 16px; padding:1px; background: linear-gradient(135deg, rgba(255,255,255,0.08), transparent 40%); -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); -webkit-mask-composite: xor; mask-composite: exclude; pointer-events:none; opacity:0; transition: opacity .25s; }
+  .pick-card:hover { border-color: rgba(34,197,94,0.25); transform: translateY(-3px); box-shadow: 0 18px 48px -12px rgba(0,0,0,0.6), 0 0 0 1px rgba(34,197,94,0.15), 0 0 60px -20px rgba(34,197,94,0.4); }
+  .pick-card:hover::before { opacity: 1; }
+  .pick-card .glint { position:absolute; top:0; left:0; width:30%; height:100%; background: linear-gradient(90deg, transparent, rgba(255,255,255,0.06), transparent); pointer-events:none; opacity:0; }
+  .pick-card:hover .glint { opacity:1; animation: glint 1.2s ease forwards; }
+
+  /* Lock pattern */
+  .lock-grid::before {
+    content:''; position:absolute; inset:0;
+    background-image: repeating-linear-gradient(45deg, transparent, transparent 6px, rgba(255,255,255,0.03) 6px, rgba(255,255,255,0.03) 12px);
+    pointer-events:none;
+  }
+  .scan-line::after {
+    content:''; position:absolute; left:0; right:0; height:80px; pointer-events:none;
+    background: linear-gradient(180deg, transparent, rgba(34,197,94,0.15), transparent);
+    animation: scan 3s ease-in-out infinite;
+    opacity: 0.6;
+  }
+
+  /* Seller chip */
+  .seller-chip { background: rgba(0,0,0,0.55); backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.08); transition: all .2s; }
+  .seller-chip:hover { border-color: rgba(34,197,94,0.4); background: rgba(34,197,94,0.06); }
+  .seller-hover-wrap { z-index: 1; }
+  .seller-hover-wrap:hover { z-index: 50; }
+  .seller-popover { position: absolute; bottom: calc(100% + 8px); left: 0; width: 280px; padding: 14px; background: rgba(15,17,22,0.96); backdrop-filter: blur(16px); border: 1px solid rgba(34,197,94,0.25); border-radius: 12px; box-shadow: 0 20px 50px -10px rgba(0,0,0,0.7), 0 0 0 1px rgba(255,255,255,0.04); opacity: 0; pointer-events: none; transform: translateY(6px) scale(0.96); transition: all .18s ease; z-index: 100; }
+  .seller-hover-wrap:hover .seller-popover, .seller-hover-wrap.force-tour-hover .seller-popover { opacity: 1; pointer-events: auto; transform: translateY(0) scale(1); }
+  .seller-hover-wrap.force-tour-hover { z-index: 9150; }
+  .seller-popover-header { display: flex; align-items: center; gap: 10px; }
+  .follow-btn { background: linear-gradient(180deg, #22c55e, #16a34a); color: #04130a; display: inline-flex; align-items: center; justify-content: center; gap: 5px; transition: all .15s; border: 1px solid rgba(34,197,94,0.5); }
+  .follow-btn:hover { transform: translateY(-1px); box-shadow: 0 6px 16px -4px rgba(34,197,94,0.5); }
+  .follow-btn.active { background: rgba(34,197,94,0.12); color: #22c55e; border-color: rgba(34,197,94,0.4); }
+  .stake-pill { display: inline-flex; align-items: center; gap: 5px; padding: 3px 9px; border-radius: 9999px; font-size: 10px; font-family: 'JetBrains Mono', monospace; color: #4ade80; background: rgba(34,197,94,0.08); border: 1px solid rgba(34,197,94,0.22); white-space: nowrap; }
+  .stake-pill i { width: 10px; height: 10px; }
+  .filter-active { background: var(--accent) !important; color: #04130a !important; border-color: var(--accent) !important; }
+
+  /* Result card */
+  .result-card { position: relative; background: var(--panel); border: 1px solid var(--border); border-radius: 16px; overflow: hidden; transition: all .25s ease; }
+  .result-card:hover { transform: translateY(-3px); border-color: var(--border-hover); box-shadow: 0 16px 40px -12px rgba(0,0,0,0.6); }
+  .result-card.rc-won { border-color: rgba(34,197,94,0.25); }
+  .result-card.rc-won:hover { border-color: rgba(34,197,94,0.5); box-shadow: 0 16px 40px -12px rgba(34,197,94,0.4); }
+  .result-card.rc-lost { border-color: rgba(239,68,68,0.22); }
+  .result-card.rc-lost:hover { border-color: rgba(239,68,68,0.45); box-shadow: 0 16px 40px -12px rgba(239,68,68,0.35); }
+  .result-card.rc-pending { border-color: rgba(59,130,246,0.22); }
+  .result-card.rc-pending:hover { border-color: rgba(59,130,246,0.45); box-shadow: 0 16px 40px -12px rgba(59,130,246,0.35); }
+  .rc-banner { height: 120px; padding: 16px; position: relative; overflow: hidden; display:flex; align-items:flex-end; }
+  .rc-banner::after { content:''; position:absolute; inset:0; background: linear-gradient(180deg, transparent 30%, rgba(0,0,0,0.55) 100%); pointer-events:none; }
+  .rc-scan { position:absolute; inset:0; background: repeating-linear-gradient(0deg, transparent 0px, transparent 3px, rgba(255,255,255,0.04) 3px, rgba(255,255,255,0.04) 4px); pointer-events:none; }
+  .rc-corner { position:absolute; width:18px; height:18px; border:1.5px solid rgba(255,255,255,0.7); }
+  .rc-corner.tl { top:8px; left:8px; border-right:none; border-bottom:none; }
+  .rc-corner.tr { top:8px; right:8px; border-left:none; border-bottom:none; }
+  .rc-pick-name { position:relative; z-index:5; }
+  .rc-status-pill { display:inline-flex; align-items:center; gap:5px; padding: 4px 10px; border-radius: 9999px; font-size: 10px; font-weight: 700; letter-spacing: 0.08em; backdrop-filter: blur(10px); }
+  .rc-status-pill.rc-pending { background: rgba(59,130,246,0.18); color:#93c5fd; border:1px solid rgba(59,130,246,0.4); }
+  .rc-status-pill.rc-won     { background: rgba(34,197,94,0.22); color:#86efac; border:1px solid rgba(34,197,94,0.5); box-shadow: 0 0 18px rgba(34,197,94,0.4); }
+  .rc-status-pill.rc-lost    { background: rgba(239,68,68,0.20); color:#fca5a5; border:1px solid rgba(239,68,68,0.45); }
+  .rc-status-pill.rc-void    { background: rgba(161,161,170,0.18); color:#d4d4d8; border:1px solid rgba(161,161,170,0.35); }
+  .rc-progress { height: 4px; border-radius: 2px; background: rgba(255,255,255,0.05); overflow: hidden; }
+  .rc-progress-fill { height: 100%; border-radius: 2px; }
+  .rc-progress-live { width: 60%; background: linear-gradient(90deg, transparent, #3b82f6 50%, transparent); animation: rc-live 1.8s ease-in-out infinite; }
+  @keyframes rc-live { 0%{transform:translateX(-60%)} 100%{transform:translateX(160%)} }
+  .rc-progress-win { width: 100%; background: linear-gradient(90deg, #16a34a, #22c55e, #4ade80); box-shadow: 0 0 12px rgba(34,197,94,0.6); }
+  .rc-progress-lose { width: 100%; background: linear-gradient(90deg, #b91c1c, #ef4444); }
+  .rc-badge { display: inline-flex; align-items: center; gap: 5px; padding: 4px 10px; border-radius: 8px; font-size: 11px; font-weight: 700; letter-spacing: 0.05em; }
+  .rc-badge.rc-won { background: rgba(34,197,94,0.15); color: #4ade80; border: 1px solid rgba(34,197,94,0.4); }
+  .rc-badge.rc-lost{ background: rgba(239,68,68,0.15); color: #f87171; border: 1px solid rgba(239,68,68,0.4); }
+  .rc-banner.gradient-mlb, .rc-banner.gradient-nba, .rc-banner.gradient-nfl, .rc-banner.gradient-nhl { filter: saturate(1.1); }
+
+  /* Leaderboard cards */
+  .lb-card { position: relative; background: var(--panel); border: 1px solid var(--border); border-radius: 14px; overflow: hidden; cursor: pointer; transition: all .2s ease; }
+  .lb-card:hover { transform: translateY(-2px); border-color: var(--border-hover); box-shadow: 0 12px 32px -10px rgba(0,0,0,0.6); }
+  .lb-card.lb-card-top { border-color: rgba(34,197,94,0.3); box-shadow: 0 0 0 1px rgba(34,197,94,0.15); }
+  .lb-card.lb-card-top:hover { box-shadow: 0 12px 36px -8px rgba(34,197,94,0.4), 0 0 0 1px rgba(34,197,94,0.3); }
+  .lb-banner { height: 56px; position: relative; overflow: hidden; }
+  .lb-rank { position: absolute; top: 8px; left: 12px; z-index: 5; font-family: 'JetBrains Mono', monospace; font-weight: 700; font-size: 14px; padding: 4px 10px; border-radius: 8px; background: rgba(0,0,0,0.5); backdrop-filter: blur(8px); border: 1px solid rgba(255,255,255,0.12); color: #fff; }
+  .lb-rank.lb-rank-gold   { background: linear-gradient(135deg, #fde047, #ca8a04); color: #1a1500; border-color: rgba(255,215,0,0.5); box-shadow: 0 0 18px rgba(253,224,71,0.5); }
+  .lb-rank.lb-rank-silver { background: linear-gradient(135deg, #e5e7eb, #9ca3af); color: #1f2937; border-color: rgba(229,231,235,0.4); }
+  .lb-rank.lb-rank-bronze { background: linear-gradient(135deg, #fb923c, #b45309); color: #1f1100; border-color: rgba(251,146,60,0.4); }
+  .lb-body { display: flex; align-items: center; padding: 14px 16px; padding-top: 10px; position: relative; }
+  .lb-avatar { width: 44px; height: 44px; border-radius: 50%; background: linear-gradient(135deg, #22c55e, #3b82f6); display: flex; align-items: center; justify-content: center; font-weight: 700; color: #04130a; margin-top: -28px; border: 3px solid var(--panel); position: relative; z-index: 2; }
+  .lb-stats { display: grid; grid-template-columns: repeat(3, 1fr) auto; gap: 12px; align-items: center; padding: 12px 16px; border-top: 1px solid var(--border); background: rgba(0,0,0,0.2); }
+  .lb-action { padding-left: 8px; }
+
+  /* Seller profile hero */
+  .profile-hero { background: var(--panel); border: 1px solid var(--border); border-radius: 16px; overflow: hidden; margin-bottom: 24px; }
+  .profile-banner { height: 140px; position: relative; overflow: hidden; }
+  .profile-banner::after { content:''; position:absolute; inset:0; background: linear-gradient(180deg, transparent 0%, rgba(0,0,0,0.4) 100%); }
+  .profile-body { display: flex; align-items: center; gap: 16px; padding: 0 24px; padding-top: 0; padding-bottom: 18px; flex-wrap: wrap; }
+  .profile-avatar { width: 88px; height: 88px; border-radius: 50%; background: linear-gradient(135deg, #22c55e, #3b82f6); display: flex; align-items: center; justify-content: center; font-size: 36px; font-weight: 800; color: #04130a; margin-top: -44px; border: 4px solid var(--panel); box-shadow: 0 8px 20px -6px rgba(0,0,0,0.6); flex-shrink: 0; }
+  .profile-stats { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; padding: 18px 24px 22px; border-top: 1px solid var(--border); background: rgba(0,0,0,0.2); }
+  @media (min-width: 768px) { .profile-stats { grid-template-columns: repeat(5, 1fr); } }
+  .profile-stat { background: rgba(255,255,255,0.025); border: 1px solid var(--border); border-radius: 10px; padding: 12px 14px; }
+
+  /* Tour overlay */
+  .tour-overlay { position: fixed; inset: 0; z-index: 9000; pointer-events: auto; background: rgba(0,0,0,0.72); backdrop-filter: blur(2px); opacity: 0; transition: opacity .3s; }
+  .tour-overlay.active { opacity: 1; }
+  .tour-target { position: relative; z-index: 9100 !important; box-shadow: 0 0 0 4px rgba(34,197,94,0.65), 0 0 60px 4px rgba(34,197,94,0.45), 0 0 0 9999px rgba(0,0,0,0.72) !important; border-radius: 14px; transition: all .3s; animation: tour-pulse 2s ease-in-out infinite; }
+  @keyframes tour-pulse { 0%,100% { box-shadow: 0 0 0 4px rgba(34,197,94,0.65), 0 0 60px 4px rgba(34,197,94,0.45), 0 0 0 9999px rgba(0,0,0,0.72); } 50% { box-shadow: 0 0 0 6px rgba(34,197,94,0.85), 0 0 80px 8px rgba(34,197,94,0.6), 0 0 0 9999px rgba(0,0,0,0.72); } }
+  .tour-tip { position: fixed; z-index: 9200; background: linear-gradient(180deg, #14161c, #0d0e12); border: 1px solid rgba(34,197,94,0.4); border-radius: 14px; padding: 18px 20px; box-shadow: 0 24px 60px -10px rgba(0,0,0,0.8), 0 0 0 1px rgba(255,255,255,0.04); width: 340px; max-width: calc(100vw - 32px); transition: all .25s ease; }
+  .tour-tip-step { font-size: 10px; color: #22c55e; font-family: 'JetBrains Mono', monospace; letter-spacing: 0.15em; margin-bottom: 6px; }
+  .tour-tip-title { font-size: 16px; font-weight: 700; color: #fff; margin-bottom: 6px; }
+  .tour-tip-body { font-size: 13px; color: #a1a1aa; line-height: 1.5; margin-bottom: 14px; }
+  .tour-tip-progress { display: flex; gap: 4px; margin-bottom: 14px; }
+  .tour-tip-progress span { flex: 1; height: 3px; border-radius: 2px; background: rgba(255,255,255,0.08); transition: all .3s; }
+  .tour-tip-progress span.done { background: rgba(34,197,94,0.5); }
+  .tour-tip-progress span.current { background: #22c55e; box-shadow: 0 0 8px rgba(34,197,94,0.6); }
+  .tour-tip-actions { display: flex; gap: 8px; align-items: center; }
+  .tour-tip-actions .btn-tour-next { flex: 1; background: linear-gradient(180deg,#22c55e,#16a34a); color: #04130a; padding: 8px 14px; border-radius: 8px; font-weight: 600; font-size: 13px; display: inline-flex; align-items: center; justify-content: center; gap: 5px; }
+  .tour-tip-actions .btn-tour-skip { color: #6b7280; font-size: 11px; padding: 8px 10px; }
+  .tour-tip-actions .btn-tour-skip:hover { color: #d4d4d8; }
+  .tour-tip::before { content:''; position:absolute; width: 14px; height: 14px; background: #14161c; border-left: 1px solid rgba(34,197,94,0.4); border-top: 1px solid rgba(34,197,94,0.4); }
+  .tour-tip[data-arrow="top"]::before { top: -8px; left: 24px; transform: rotate(45deg); }
+  .tour-tip[data-arrow="bottom"]::before { bottom: -8px; left: 24px; transform: rotate(225deg); }
+  .tour-tip[data-arrow="left"]::before { left: -8px; top: 24px; transform: rotate(-45deg); }
+  .tour-tip[data-arrow="right"]::before { right: -8px; top: 24px; transform: rotate(135deg); }
+  .tour-center { left: 50% !important; top: 50% !important; transform: translate(-50%, -50%); width: 420px; }
+  .tour-center::before { display: none; }
+  .tour-tip-actions .btn-tour-back { color: #6b7280; font-size: 11px; padding: 8px 10px; }
+  .tour-tip-actions .btn-tour-back:hover { color: #d4d4d8; }
+
+  /* Live dot */
+  .live-dot { position: relative; width: 6px; height: 6px; border-radius: 50%; background: #ef4444; }
+  .live-dot::after { content:''; position: absolute; inset: -3px; border-radius: 50%; border: 2px solid #ef4444; animation: ring-pulse 1.5s infinite; }
+  .live-dot-green { background: #22c55e; }
+  .live-dot-green::after { border-color: #22c55e; }
+
+  /* Number ticker */
+  .num-flip { display: inline-block; transition: transform 0.3s cubic-bezier(.4,0,.2,1); }
+
+  /* Confidence dots */
+  .conf-dot { width: 6px; height: 6px; border-radius: 50%; display: inline-block; }
+  .conf-on { background: var(--accent); box-shadow: 0 0 8px rgba(34,197,94,0.5); }
+  .conf-off { background: rgba(255,255,255,0.1); }
+
+  /* Section head accent bar */
+  .accent-bar { width: 3px; height: 18px; background: linear-gradient(180deg, #22c55e, #16a34a); border-radius: 2px; box-shadow: 0 0 8px rgba(34,197,94,0.4); }
+
+  /* Marquee/big numbers */
+  .num-display { font-feature-settings: 'tnum' 1, 'lnum' 1; font-variant-numeric: tabular-nums; }
+
+  /* Hover tilt */
+  .tilt { transition: transform .25s cubic-bezier(.4,0,.2,1); }
+  .tilt:hover { transform: perspective(800px) rotateX(2deg) translateY(-2px); }
+
+  /* Hide scrollbar in pills row */
+  .scroll-hide::-webkit-scrollbar { display: none; }
+  .scroll-hide { scrollbar-width: none; }
+
+  /* ═══════════════ INTERACTIVE FUTURISTIC LAYER ═══════════════ */
+
+  /* Cursor aurora (global) */
+  .aurora-cursor { position: fixed; top:0; left:0; width: 480px; height: 480px; border-radius: 50%; pointer-events: none; z-index: 1; transform: translate(-50%, -50%); background: radial-gradient(circle, rgba(34,197,94,0.10) 0%, rgba(59,130,246,0.05) 35%, transparent 65%); mix-blend-mode: screen; transition: opacity .3s; opacity: 0; filter: blur(20px); }
+  .aurora-cursor.on { opacity: 1; }
+
+  /* 3D tilt + spotlight pick card */
+  .pick-card { --mx: 50%; --my: 50%; --rx: 0deg; --ry: 0deg; transform-style: preserve-3d; transform: perspective(1000px) rotateX(var(--rx)) rotateY(var(--ry)); will-change: transform; }
+  .pick-card .spotlight { position:absolute; inset:0; pointer-events:none; opacity:0; transition: opacity .25s; background: radial-gradient(circle 280px at var(--mx) var(--my), rgba(34,197,94,0.18), transparent 65%); border-radius: 16px; z-index: 3; mix-blend-mode: screen; }
+  .pick-card:hover .spotlight { opacity: 1; }
+
+  /* Holographic animated border */
+  .holo-border { position:absolute; inset:-1px; border-radius: 17px; padding:1px; background: conic-gradient(from var(--ang, 0deg), #22c55e, #3b82f6, #a855f7, #ef4444, #fde047, #22c55e); -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); -webkit-mask-composite: xor; mask-composite: exclude; opacity: 0; transition: opacity .35s; pointer-events:none; filter: blur(0.4px); animation: holo-rotate 4s linear infinite; }
+  .pick-card:hover .holo-border { opacity: 0.7; }
+  @keyframes holo-rotate { to { --ang: 360deg; } }
+  @property --ang { syntax: '<angle>'; initial-value: 0deg; inherits: false; }
+
+  /* Decrypt scramble */
+  .decrypt-text { font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.1em; color: rgba(255,255,255,0.55); display: inline-flex; gap: 2px; }
+  .decrypt-text span { display: inline-block; width: 1ch; }
+
+  /* Data stream lines in lock area */
+  .data-stream { position:absolute; inset:0; overflow:hidden; pointer-events:none; opacity: 0.45; }
+  .data-stream span { position:absolute; top:-20%; width: 1px; height: 60%; background: linear-gradient(180deg, transparent, rgba(34,197,94,0.7), transparent); animation: stream-fall var(--d, 3s) linear infinite; animation-delay: var(--del, 0s); left: var(--x, 10%); }
+  @keyframes stream-fall { 0% { transform: translateY(-30%); } 100% { transform: translateY(220%); } }
+
+  /* Stake meter */
+  .stake-bar { height: 4px; border-radius: 999px; background: rgba(255,255,255,0.05); overflow: hidden; position: relative; }
+  .stake-bar-fill { height: 100%; border-radius: 999px; background: linear-gradient(90deg, #22c55e, #4ade80, #22c55e); background-size: 200% 100%; animation: bar-shift 2.5s linear infinite; box-shadow: 0 0 12px rgba(34,197,94,0.5); position: relative; }
+  @keyframes bar-shift { 0% { background-position: 0% 0; } 100% { background-position: 200% 0; } }
+
+  /* Sparkline streak dots */
+  .streak-dots { display: inline-flex; gap: 3px; align-items: center; }
+  .streak-dot { width: 5px; height: 5px; border-radius: 1.5px; }
+  .streak-W { background: #22c55e; box-shadow: 0 0 6px rgba(34,197,94,0.6); }
+  .streak-L { background: rgba(239,68,68,0.6); }
+  .streak-P { background: rgba(255,255,255,0.2); }
+  .streak-dot:last-child { width: 7px; height: 7px; border-radius: 2px; animation: pulse-dot 1.6s infinite; }
+  @keyframes pulse-dot { 0%,100% { transform: scale(1); } 50% { transform: scale(1.2); } }
+
+  /* Live viewer pulse */
+  .view-pulse { display: inline-flex; align-items: center; gap: 4px; padding: 2px 7px; border-radius: 999px; background: rgba(239,68,68,0.1); border: 1px solid rgba(239,68,68,0.25); font-size: 10px; color: #fca5a5; font-weight: 600; }
+  .view-pulse-dot { width: 5px; height: 5px; border-radius: 50%; background: #ef4444; box-shadow: 0 0 8px rgba(239,68,68,0.7); animation: pulse-dot 1.4s infinite; }
+
+  /* Countdown */
+  .countdown { display: inline-flex; align-items: center; gap: 4px; font-family: 'JetBrains Mono', monospace; font-size: 10.5px; color: #fde047; padding: 2px 7px; border-radius: 6px; background: rgba(250,204,21,0.08); border: 1px solid rgba(250,204,21,0.25); font-weight: 600; }
+
+  /* Pick price morph on hover */
+  .pick-card .price-num { transition: transform .3s cubic-bezier(.34,1.56,.64,1); }
+  .pick-card:hover .price-num { transform: scale(1.08); }
+
+  /* Unlock button slide reveal */
+  .bookmark-btn { position:absolute; top:10px; right:10px; width:30px; height:30px; display:flex; align-items:center; justify-content:center; border-radius:8px; background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.08); color:#a1a1aa; cursor:pointer; transition:all .2s; z-index:5; }
+  .bookmark-btn:hover { background:rgba(34,197,94,0.12); border-color:rgba(34,197,94,0.4); color:#22c55e; transform:scale(1.08); }
+  .bookmark-btn.active { background:rgba(34,197,94,0.18); border-color:rgba(34,197,94,0.6); color:#22c55e; box-shadow:0 0 14px rgba(34,197,94,0.35); }
+  .bookmark-btn.active i { fill:#22c55e; }
+  .bookmark-btn.pulse { animation: bk-pulse .5s ease; }
+  @keyframes bk-pulse { 0%{transform:scale(1)} 50%{transform:scale(1.35)} 100%{transform:scale(1)} }
+  .unlock-btn { position: relative; overflow: hidden; }
+  .unlock-btn::before { content:''; position:absolute; inset:0; background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent); transform: translateX(-100%); transition: transform .6s; }
+  .pick-card:hover .unlock-btn::before { transform: translateX(100%); }
+
+  /* Sport logo discs */
+  .sport-disc { width: 28px; height: 28px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; background: rgba(0,0,0,0.55); border: 1px solid rgba(255,255,255,0.18); backdrop-filter: blur(8px); box-shadow: inset 0 1px 0 rgba(255,255,255,0.15), 0 4px 12px -4px rgba(0,0,0,0.6); flex-shrink: 0; }
+  .sport-disc svg { width: 16px; height: 16px; }
+
+  /* Lock cube glow on hover */
+  .pick-card:hover .lock-cube { box-shadow: inset 0 1px 0 rgba(255,255,255,0.2), 0 0 32px rgba(34,197,94,0.6), 0 0 0 1px rgba(34,197,94,0.5); }
+  .lock-cube { transition: box-shadow .3s; }
+
+  /* Banner: subtle parallax depth on hover via inner element */
+  .pick-card:hover .gradient-mlb,
+  .pick-card:hover .gradient-nba,
+  .pick-card:hover .gradient-nfl,
+  .pick-card:hover .gradient-nhl { filter: brightness(1.08) saturate(1.1); }
+  .gradient-mlb, .gradient-nba, .gradient-nfl, .gradient-nhl { transition: filter .3s; }
+
+  /* Animated corner brackets in lock area */
+  .corner-bracket { position:absolute; width: 14px; height: 14px; border: 1.5px solid rgba(255,255,255,0.4); pointer-events:none; }
+  .corner-bracket.tl { top: 6px; left: 6px; border-right: none; border-bottom: none; }
+  .corner-bracket.tr { top: 6px; right: 6px; border-left: none; border-bottom: none; }
+  .corner-bracket.bl { bottom: 6px; left: 6px; border-right: none; border-top: none; }
+  .corner-bracket.br { bottom: 6px; right: 6px; border-left: none; border-top: none; }
+
+  /* Ripple effect */
+  .pick-card .ripple { position:absolute; border-radius: 50%; background: rgba(34,197,94,0.25); pointer-events:none; transform: translate(-50%,-50%) scale(0); animation: ripple-out .7s ease-out forwards; z-index: 4; }
+  @keyframes ripple-out { to { transform: translate(-50%,-50%) scale(20); opacity: 0; } }
+
+  /* Nav links */
+  .nav-link { padding: 8px 12px; border-radius: 8px; color: var(--muted); white-space: nowrap; transition: all .15s ease; display: inline-flex; align-items: center; gap: 6px; line-height: 1; }
+  .nav-link:hover { color: var(--text); background: rgba(255,255,255,0.04); }
+  [data-theme="light"] .nav-link { color: #4b5563; }
+  [data-theme="light"] .nav-link:hover { color: #0b0c10; background: rgba(15,23,42,0.05); }
+  .nav-count { display: inline-flex; align-items: center; justify-content: center; min-width: 18px; height: 18px; padding: 0 5px; border-radius: 9999px; background: rgba(34,197,94,0.15); color: var(--accent); font-size: 10px; font-weight: 700; font-family: 'JetBrains Mono', monospace; line-height: 1; }
+  .user-avatar { width: 24px; height: 24px; border-radius: 50%; background: linear-gradient(135deg, #22c55e, #3b82f6); display: inline-flex; align-items: center; justify-content: center; color: #04130a; font-size: 11px; font-weight: 800; flex-shrink: 0; }
+
+  /* Theme toggle button */
+  .theme-toggle { display: inline-flex; align-items: center; justify-content: center; width: 36px; height: 36px; border-radius: 8px; border: 1px solid var(--border); background: rgba(255,255,255,0.02); color: var(--text); transition: all .15s ease; cursor: pointer; flex-shrink: 0; }
+  .theme-toggle:hover { border-color: var(--border-hover); background: rgba(255,255,255,0.05); }
+  .theme-toggle [data-lucide] { width: 16px; height: 16px; }
+  [data-theme="light"] .theme-toggle { background: rgba(0,0,0,0.02); }
+  [data-theme="light"] .theme-toggle:hover { background: rgba(0,0,0,0.05); }
+
+  /* ═══════════════════════════════════════════════════════════════
+     LIGHT THEME — comprehensive override
+     ═══════════════════════════════════════════════════════════════ */
+  [data-theme="light"] {
+    --bg: #f7f6f1;
+    --panel: #ffffff;
+    --panel2: #f1efe9;
+    --border: rgba(15,23,42,0.10);
+    --border-hover: rgba(15,23,42,0.20);
+    --text: #0b0c10;
+    --muted: #5b6271;
+  }
+  [data-theme="light"] body {
+    background-image:
+      radial-gradient(at 12% 8%, rgba(34,197,94,0.10) 0px, transparent 45%),
+      radial-gradient(at 88% 4%, rgba(59,130,246,0.07) 0px, transparent 50%),
+      linear-gradient(to bottom, #f7f6f1 0%, #f7f6f1 100%);
+  }
+  [data-theme="light"] body::before {
+    background-image:
+      linear-gradient(to right, rgba(15,23,42,0.04) 1px, transparent 1px),
+      linear-gradient(to bottom, rgba(15,23,42,0.04) 1px, transparent 1px);
+  }
+  /* Surfaces */
+  [data-theme="light"] .glass {
+    background: linear-gradient(180deg, rgba(255,255,255,0.85), rgba(255,255,255,0.7));
+    border: 1px solid var(--border);
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.8), 0 1px 0 rgba(15,23,42,0.04);
+  }
+  [data-theme="light"] .card {
+    background: linear-gradient(180deg, #ffffff, #fbfaf6);
+    border: 1px solid var(--border);
+    box-shadow: 0 1px 2px rgba(15,23,42,0.04), inset 0 1px 0 rgba(255,255,255,0.8);
+  }
+  [data-theme="light"] .pick-card {
+    background: linear-gradient(180deg, #ffffff 0%, #faf9f4 100%);
+    border: 1px solid var(--border);
+    box-shadow: 0 2px 8px -2px rgba(15,23,42,0.06), inset 0 1px 0 rgba(255,255,255,0.8);
+  }
+  [data-theme="light"] .pick-card:hover {
+    border-color: rgba(34,197,94,0.4);
+    box-shadow: 0 18px 48px -12px rgba(15,23,42,0.18), 0 0 0 1px rgba(34,197,94,0.25), 0 0 60px -20px rgba(34,197,94,0.35);
+  }
+  [data-theme="light"] .result-card { background: var(--panel); }
+  [data-theme="light"] .result-card:hover { box-shadow: 0 16px 40px -12px rgba(15,23,42,0.18); }
+  [data-theme="light"] .lb-card { background: var(--panel); }
+  [data-theme="light"] .lb-card:hover { box-shadow: 0 12px 32px -10px rgba(15,23,42,0.18); }
+  [data-theme="light"] .lb-stats { background: rgba(15,23,42,0.025); }
+  [data-theme="light"] .profile-hero { background: var(--panel); }
+  [data-theme="light"] .profile-stats { background: rgba(15,23,42,0.025); }
+  [data-theme="light"] .profile-stat { background: rgba(15,23,42,0.025); }
+
+  /* Buttons */
+  [data-theme="light"] .btn-ghost {
+    border: 1px solid var(--border); background: rgba(255,255,255,0.7); color: var(--text);
+  }
+  [data-theme="light"] .btn-ghost:hover { background: #ffffff; border-color: var(--border-hover); }
+
+  /* Pills/inputs */
+  [data-theme="light"] .odds-pill {
+    background: linear-gradient(180deg, #ffffff, #f4f3ee);
+    border: 1px solid var(--border);
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.8);
+    color: var(--text);
+  }
+  [data-theme="light"] input,
+  [data-theme="light"] select,
+  [data-theme="light"] textarea {
+    background: #ffffff; color: var(--text); border: 1px solid var(--border);
+  }
+
+  /* Modal */
+  [data-theme="light"] .modal-bg { background: rgba(15,23,42,0.45); }
+
+  /* Skeleton */
+  [data-theme="light"] .skeleton-bar {
+    background: linear-gradient(90deg, rgba(15,23,42,0.04) 0%, rgba(15,23,42,0.10) 50%, rgba(15,23,42,0.04) 100%);
+  }
+
+  /* Text gradient — make readable on light */
+  [data-theme="light"] .text-gradient {
+    background: linear-gradient(180deg, #0b0c10 0%, #4b5563 100%);
+    -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent;
+  }
+
+  /* Mesh hero — softer light radials */
+  [data-theme="light"] .mesh-hero::before {
+    background:
+      radial-gradient(circle at 20% 20%, rgba(34,197,94,0.20), transparent 40%),
+      radial-gradient(circle at 80% 30%, rgba(59,130,246,0.14), transparent 45%),
+      radial-gradient(circle at 50% 80%, rgba(168,85,247,0.12), transparent 40%);
+  }
+  [data-theme="light"] .mesh-hero::after {
+    background-image:
+      linear-gradient(to right, rgba(15,23,42,0.05) 1px, transparent 1px),
+      linear-gradient(to bottom, rgba(15,23,42,0.05) 1px, transparent 1px);
+  }
+
+  /* Seller chip & popover */
+  [data-theme="light"] .seller-chip {
+    background: rgba(255,255,255,0.75); backdrop-filter: blur(10px);
+    border: 1px solid rgba(15,23,42,0.10); color: var(--text);
+  }
+  [data-theme="light"] .seller-chip:hover { background: rgba(34,197,94,0.10); border-color: rgba(34,197,94,0.4); }
+  [data-theme="light"] .seller-popover {
+    background: rgba(255,255,255,0.98); border: 1px solid rgba(34,197,94,0.30);
+    box-shadow: 0 24px 60px -10px rgba(15,23,42,0.25), 0 0 0 1px rgba(15,23,42,0.04);
+    color: var(--text);
+  }
+  [data-theme="light"] .follow-btn.active {
+    background: rgba(34,197,94,0.10); color: #15803d; border-color: rgba(34,197,94,0.4);
+  }
+
+  /* Tab tabs */
+  [data-theme="light"] .tab-active { color: var(--text); border-bottom-color: var(--accent); }
+  [data-theme="light"] .tab-inactive { color: var(--muted); }
+
+  /* Result-card progress bg */
+  [data-theme="light"] .rc-progress { background: rgba(15,23,42,0.06); }
+
+  /* Tour overlay/tip */
+  [data-theme="light"] .tour-overlay { background: rgba(15,23,42,0.55); }
+  [data-theme="light"] .tour-target {
+    box-shadow: 0 0 0 4px rgba(34,197,94,0.65), 0 0 60px 4px rgba(34,197,94,0.45), 0 0 0 9999px rgba(15,23,42,0.55) !important;
+  }
+  [data-theme="light"] @keyframes tour-pulse {
+    0%,100% { box-shadow: 0 0 0 4px rgba(34,197,94,0.65), 0 0 60px 4px rgba(34,197,94,0.45), 0 0 0 9999px rgba(15,23,42,0.55); }
+    50% { box-shadow: 0 0 0 6px rgba(34,197,94,0.85), 0 0 80px 8px rgba(34,197,94,0.6), 0 0 0 9999px rgba(15,23,42,0.55); }
+  }
+  [data-theme="light"] .tour-tip {
+    background: linear-gradient(180deg, #ffffff, #faf9f4);
+    border: 1px solid rgba(34,197,94,0.4);
+    box-shadow: 0 24px 60px -10px rgba(15,23,42,0.25), 0 0 0 1px rgba(15,23,42,0.04);
+    color: var(--text);
+  }
+  [data-theme="light"] .tour-tip-title { color: #0b0c10; }
+  [data-theme="light"] .tour-tip-body { color: #4b5563; }
+  [data-theme="light"] .tour-tip-progress span { background: rgba(15,23,42,0.10); }
+  [data-theme="light"] .tour-tip::before { background: #ffffff; }
+  [data-theme="light"] .tour-tip-actions .btn-tour-skip,
+  [data-theme="light"] .tour-tip-actions .btn-tour-back { color: #6b7280; }
+  [data-theme="light"] .tour-tip-actions .btn-tour-skip:hover,
+  [data-theme="light"] .tour-tip-actions .btn-tour-back:hover { color: #1f2937; }
+
+  /* Bookmark button */
+  [data-theme="light"] .bookmark-btn {
+    background: rgba(255,255,255,0.85); border-color: rgba(15,23,42,0.10); color: #6b7280;
+  }
+  [data-theme="light"] .bookmark-btn:hover {
+    background: rgba(34,197,94,0.10); color: #16a34a; border-color: rgba(34,197,94,0.4);
+  }
+  [data-theme="light"] .bookmark-btn.active {
+    background: rgba(34,197,94,0.12); color: #16a34a; border-color: rgba(34,197,94,0.5);
+  }
+
+  /* Sport disc and lock-cube need readable contrast on light cards */
+  [data-theme="light"] .sport-disc {
+    background: rgba(15,23,42,0.06); border-color: rgba(15,23,42,0.14);
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.6), 0 2px 6px -2px rgba(15,23,42,0.10);
+    color: var(--text);
+  }
+
+  /* Conf dots */
+  [data-theme="light"] .conf-off { background: rgba(15,23,42,0.12); }
+
+  /* Stake bar bg */
+  [data-theme="light"] .stake-bar { background: rgba(15,23,42,0.06); }
+
+  /* Banner gradient on cards keeps dark — no override (looks great on white) */
+
+  /* Tailwind utility overrides — these are baked into the markup */
+  [data-theme="light"] .text-white { color: #0b0c10 !important; }
+  [data-theme="light"] .text-zinc-300 { color: #475569 !important; }
+  [data-theme="light"] .text-zinc-400 { color: #5b6271 !important; }
+  [data-theme="light"] .text-zinc-500 { color: #6b7280 !important; }
+  [data-theme="light"] .text-zinc-600 { color: #4b5563 !important; }
+  [data-theme="light"] .hover\:text-white:hover { color: #0b0c10 !important; }
+  [data-theme="light"] .bg-bg\/95 { background-color: rgba(247,246,241,0.92) !important; }
+  [data-theme="light"] .bg-bg\/50 { background-color: rgba(247,246,241,0.6) !important; }
+  [data-theme="light"] .bg-panel { background-color: var(--panel) !important; }
+  [data-theme="light"] .bg-panel\/50 { background-color: rgba(255,255,255,0.6) !important; }
+  [data-theme="light"] .bg-panel2 { background-color: var(--panel2) !important; }
+  [data-theme="light"] .border-border { border-color: var(--border) !important; }
+  [data-theme="light"] .border-y { border-color: var(--border); }
+
+  /* Banner over light page — preserve clarity inside cards (cards stay white, banners stay dark+vibrant) */
+
+  /* Nav pv-logo stay white-on-glow regardless */
+
+  /* ═══════════════════════════════════════════════════════════════
+     POLISHED TABS — Dashboard, How it works, Grading
+     ═══════════════════════════════════════════════════════════════ */
+
+  /* Section hero — used on Dashboard / How / Grading top */
+  .section-hero {
+    position: relative; overflow: hidden; border-radius: 18px;
+    border: 1px solid var(--border);
+    background: linear-gradient(135deg, rgba(34,197,94,0.10) 0%, rgba(59,130,246,0.06) 50%, rgba(168,85,247,0.06) 100%);
+    padding: 28px 28px;
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.05);
+  }
+  .section-hero::before {
+    content:''; position:absolute; inset:0; pointer-events:none;
+    background-image:
+      linear-gradient(to right, rgba(255,255,255,0.04) 1px, transparent 1px),
+      linear-gradient(to bottom, rgba(255,255,255,0.04) 1px, transparent 1px);
+    background-size: 40px 40px;
+    mask-image: radial-gradient(ellipse 80% 80% at 30% 30%, black 30%, transparent 80%);
+  }
+  [data-theme="light"] .section-hero {
+    background: linear-gradient(135deg, rgba(34,197,94,0.13) 0%, rgba(59,130,246,0.08) 50%, rgba(168,85,247,0.08) 100%);
+  }
+  [data-theme="light"] .section-hero::before {
+    background-image:
+      linear-gradient(to right, rgba(15,23,42,0.05) 1px, transparent 1px),
+      linear-gradient(to bottom, rgba(15,23,42,0.05) 1px, transparent 1px);
+  }
+
+  /* Stat tile — replaces plain card stats */
+  .stat-tile {
+    position: relative; padding: 16px 18px; border-radius: 14px;
+    background: linear-gradient(180deg, #0e1015, #0a0b0e);
+    border: 1px solid var(--border);
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.04);
+    overflow: hidden;
+    transition: all .2s ease;
+  }
+  .stat-tile:hover { transform: translateY(-2px); border-color: var(--border-hover); }
+  .stat-tile::after {
+    content:''; position:absolute; top:0; left:0; right:0; height:3px;
+    background: linear-gradient(90deg, var(--tile-accent, #22c55e), transparent);
+    opacity: 0.7;
+  }
+  .stat-tile-label { font-size: 10.5px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); }
+  .stat-tile-value { font-family: 'JetBrains Mono', monospace; font-weight: 700; font-size: 26px; letter-spacing: -0.01em; margin-top: 6px; line-height: 1.1; }
+  .stat-tile-sub { font-size: 11.5px; color: var(--muted); margin-top: 4px; }
+  [data-theme="light"] .stat-tile { background: linear-gradient(180deg, #ffffff, #fbfaf6); }
+
+  /* Step card — for "How it works" */
+  .step-card {
+    display: flex; gap: 18px; padding: 22px 24px; border-radius: 16px;
+    background: linear-gradient(180deg, #0e1015, #0a0b0e);
+    border: 1px solid var(--border);
+    transition: all .2s ease;
+    position: relative; overflow: hidden;
+  }
+  .step-card:hover { border-color: rgba(34,197,94,0.3); transform: translateY(-2px); box-shadow: 0 16px 40px -12px rgba(34,197,94,0.15); }
+  .step-card::before {
+    content:''; position:absolute; left:0; top:0; bottom:0; width:3px;
+    background: linear-gradient(180deg, #22c55e, #16a34a);
+    box-shadow: 0 0 12px rgba(34,197,94,0.4);
+  }
+  .step-num {
+    flex-shrink: 0; width: 44px; height: 44px; border-radius: 12px;
+    background: linear-gradient(135deg, #22c55e, #16a34a);
+    color: #04130a; font-weight: 800; font-size: 18px;
+    display: flex; align-items: center; justify-content: center;
+    box-shadow: 0 6px 18px -4px rgba(34,197,94,0.5), inset 0 1px 0 rgba(255,255,255,0.3);
+  }
+  [data-theme="light"] .step-card { background: linear-gradient(180deg, #ffffff, #fbfaf6); }
+
+  /* Edge case card */
+  .edge-card {
+    padding: 18px 20px; border-radius: 14px;
+    background: linear-gradient(180deg, #0e1015, #0a0b0e);
+    border: 1px solid var(--border);
+    transition: all .2s ease;
+  }
+  .edge-card:hover { border-color: var(--border-hover); transform: translateY(-2px); }
+  .edge-icon {
+    width: 36px; height: 36px; border-radius: 10px;
+    background: rgba(34,197,94,0.10); border: 1px solid rgba(34,197,94,0.25);
+    display: flex; align-items: center; justify-content: center; font-size: 18px;
+  }
+  [data-theme="light"] .edge-card { background: linear-gradient(180deg, #ffffff, #fbfaf6); }
+
+  /* Active-pick card row replacement for dashboard table */
+  .ap-card {
+    padding: 14px 16px; border-radius: 12px;
+    background: linear-gradient(180deg, #0e1015, #0a0b0e);
+    border: 1px solid var(--border);
+    display: grid; grid-template-columns: 1.4fr 1fr 1fr 1fr 1fr 0.6fr; gap: 16px; align-items: center;
+    transition: all .15s ease;
+  }
+  .ap-card:hover { border-color: var(--border-hover); transform: translateX(2px); }
+  [data-theme="light"] .ap-card { background: linear-gradient(180deg, #ffffff, #fbfaf6); }
+  .ap-label { font-size: 10px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); margin-bottom: 2px; }
+  .ap-val { font-family: 'JetBrains Mono', monospace; font-weight: 600; font-size: 14px; }
+
+  /* Live grading hero polish */
+  .grading-hero {
+    border-radius: 18px; padding: 24px 28px; position: relative; overflow: hidden;
+    background: linear-gradient(135deg, #0a3320 0%, #0b2440 60%, #1a1638 100%);
+    border: 1px solid rgba(34,197,94,0.25);
+    box-shadow: 0 16px 50px -12px rgba(34,197,94,0.25);
+  }
+  .grading-hero::before {
+    content:''; position:absolute; inset:0;
+    background-image:
+      linear-gradient(to right, rgba(255,255,255,0.04) 1px, transparent 1px),
+      linear-gradient(to bottom, rgba(255,255,255,0.04) 1px, transparent 1px);
+    background-size: 32px 32px;
+    mask-image: radial-gradient(ellipse 80% 80% at 30% 30%, black 30%, transparent 80%);
+  }
+  .grading-hero > * { position: relative; z-index: 1; }
+</style>
+</head>
+<body class="min-h-screen">
+
+<!-- NAV -->
+<nav class="border-b border-border sticky top-0 z-40 bg-bg/95 backdrop-blur">
+  <div class="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
+    <div class="flex items-center gap-8">
+      <div class="flex items-center gap-2.5 cursor-pointer group" onclick="showView('marketplace')">
+        <div class="pv-logo">
+          <svg viewBox="0 0 40 40" class="w-9 h-9">
+            <defs>
+              <linearGradient id="pv-grad" x1="0" y1="0" x2="1" y2="1">
+                <stop offset="0%" stop-color="#4ade80"/>
+                <stop offset="50%" stop-color="#22c55e"/>
+                <stop offset="100%" stop-color="#15803d"/>
+              </linearGradient>
+              <radialGradient id="pv-inner" cx="0.5" cy="0.4" r="0.6">
+                <stop offset="0%" stop-color="#062b14"/>
+                <stop offset="100%" stop-color="#020a05"/>
+              </radialGradient>
+              <filter id="pv-glow"><feGaussianBlur stdDeviation="0.8"/></filter>
+            </defs>
+            <!-- outer ring -->
+            <circle cx="20" cy="20" r="18.5" fill="url(#pv-grad)"/>
+            <circle cx="20" cy="20" r="18.5" fill="none" stroke="#86efac" stroke-width="0.6" opacity="0.5"/>
+            <!-- tick marks rotating -->
+            <g class="pv-ticks">
+              <g stroke="#04130a" stroke-width="1.2" stroke-linecap="round">
+                <line x1="20" y1="2.5" x2="20" y2="5.5"/>
+                <line x1="20" y1="34.5" x2="20" y2="37.5"/>
+                <line x1="2.5" y1="20" x2="5.5" y2="20"/>
+                <line x1="34.5" y1="20" x2="37.5" y2="20"/>
+              </g>
+              <g stroke="#04130a" stroke-width="0.7" stroke-linecap="round" opacity="0.7">
+                <line x1="20" y1="3" x2="20" y2="4.5" transform="rotate(30 20 20)"/>
+                <line x1="20" y1="3" x2="20" y2="4.5" transform="rotate(60 20 20)"/>
+                <line x1="20" y1="3" x2="20" y2="4.5" transform="rotate(120 20 20)"/>
+                <line x1="20" y1="3" x2="20" y2="4.5" transform="rotate(150 20 20)"/>
+                <line x1="20" y1="3" x2="20" y2="4.5" transform="rotate(210 20 20)"/>
+                <line x1="20" y1="3" x2="20" y2="4.5" transform="rotate(240 20 20)"/>
+                <line x1="20" y1="3" x2="20" y2="4.5" transform="rotate(300 20 20)"/>
+                <line x1="20" y1="3" x2="20" y2="4.5" transform="rotate(330 20 20)"/>
+              </g>
+            </g>
+            <!-- inner vault door -->
+            <circle cx="20" cy="20" r="13" fill="url(#pv-inner)" stroke="#16a34a" stroke-width="0.6"/>
+            <!-- spokes -->
+            <g class="pv-spokes" stroke="#22c55e" stroke-width="1.6" stroke-linecap="round" opacity="0.85">
+              <line x1="20" y1="9" x2="20" y2="13"/>
+              <line x1="20" y1="27" x2="20" y2="31"/>
+              <line x1="9" y1="20" x2="13" y2="20"/>
+              <line x1="27" y1="20" x2="31" y2="20"/>
+            </g>
+            <!-- center handle -->
+            <circle cx="20" cy="20" r="4.2" fill="#04130a" stroke="#4ade80" stroke-width="0.8"/>
+            <circle cx="20" cy="20" r="1.8" fill="#22c55e"/>
+            <!-- shine -->
+            <path d="M 6 10 A 18 18 0 0 1 24 4" stroke="rgba(255,255,255,0.45)" stroke-width="0.8" fill="none" stroke-linecap="round"/>
+          </svg>
+        </div>
+        <div class="flex items-baseline gap-0 leading-none">
+          <span class="font-bold text-lg tracking-tight text-white">Picks</span>
+          <span class="font-bold text-lg tracking-tight text-gradient-accent">Vault</span>
+        </div>
+      </div>
+      <div class="hidden lg:flex items-center gap-0.5 text-sm">
+        <button onclick="showView('marketplace')" class="nav-link">Marketplace</button>
+        <button onclick="showView('leaderboard')" class="nav-link">Leaderboard</button>
+        <button onclick="showView('mypicks')" class="nav-link">My Picks</button>
+        <button onclick="showView('bookmarks')" class="nav-link inline-flex items-center gap-1.5"><i data-lucide="bookmark" class="icon-sm"></i>Bookmarks<span id="nav-bookmark-count" class="nav-count">3</span></button>
+        <button onclick="showView('grading')" class="nav-link">Live Grading</button>
+        <button onclick="showView('how')" class="nav-link">How it works</button>
+      </div>
+    </div>
+    <div class="flex items-center gap-2">
+      <button onclick="openOnboarding()" class="text-sm text-accent hover:underline hidden xl:inline whitespace-nowrap">Become a seller</button>
+      <button class="theme-toggle" onclick="toggleTheme()" title="Toggle theme" aria-label="Toggle theme"><i data-lucide="moon" id="theme-icon"></i></button>
+      <button onclick="showView('dashboard')" class="btn-ghost px-3.5 py-2 rounded-md text-sm whitespace-nowrap inline-flex items-center gap-1.5"><i data-lucide="layout-dashboard" class="icon-sm"></i><span class="hidden xl:inline">Seller Dashboard</span><span class="xl:hidden">Dashboard</span></button>
+      <div class="flex items-center gap-2 px-2.5 py-1.5 rounded-md bg-panel2 border border-border whitespace-nowrap">
+        <div class="user-avatar">Y</div>
+        <span class="text-sm font-medium hidden sm:inline">@you</span>
+        <span class="text-xs text-muted font-mono">$240</span>
+      </div>
+    </div>
+  </div>
+</nav>
+
+<!-- ═══════════════ MARKETPLACE VIEW ═══════════════ -->
+<div id="view-marketplace" class="view active">
+  <!-- Hero -->
+  <section class="mesh-hero border-b border-border relative overflow-hidden">
+    <div class="max-w-7xl mx-auto px-6 py-20 relative z-10">
+      <div class="flex items-center gap-2 mb-5">
+        <span class="pill bg-accent/10 text-accent border border-accent/30 flex items-center gap-1.5"><i data-lucide="shield-check" class="icon-sm"></i>MONEY-BACK GUARANTEE</span>
+        <span class="text-xs text-muted">If the pick doesn't hit, your money comes back. Automatically.</span>
+      </div>
+      <h1 class="text-5xl md:text-7xl font-extrabold tracking-tight mb-5 leading-[1.02]">
+        <span class="text-gradient">Sports picks with a</span><br/>
+        <span class="text-accent">refund</span> <span class="text-gradient">if they don't hit.</span>
+      </h1>
+      <p class="text-zinc-400 text-lg max-w-2xl mb-7">
+        Same price as the pick-sellers you already know. But if their pick loses, the box score auto-refunds your money in under an hour. No support tickets. No "next time."
+      </p>
+      <div class="flex flex-wrap gap-3 mb-4">
+        <button onclick="startTour()" class="btn-primary px-6 py-3 rounded-md flex items-center gap-2"><i data-lucide="play-circle" class="icon-md"></i>Take the 60-second tour</button>
+        <button onclick="showView('marketplace'); scrollTo({top: 600, behavior: 'smooth'})" class="btn-ghost px-6 py-3 rounded-md flex items-center gap-2"><i data-lucide="unlock" class="icon-md"></i>Browse picks — first free</button>
+      </div>
+      <div class="text-xs text-muted flex items-center gap-2"><span class="live-dot live-dot-green"></span>No signup needed to browse · 5,200+ refunds processed this month</div>
+      <!-- Live refund counter -->
+      <div class="mt-12 grid grid-cols-2 md:grid-cols-4 gap-6 max-w-4xl">
+        <div class="card rounded-lg p-4">
+          <div id="refund-counter" class="text-3xl stat-num text-accent">$184,302</div>
+          <div class="text-sm text-muted">Refunded this month</div>
+        </div>
+        <div class="card rounded-lg p-4">
+          <div class="text-3xl stat-num">$0</div>
+          <div class="text-sm text-muted">Refunds disputed</div>
+        </div>
+        <div class="card rounded-lg p-4">
+          <div class="text-3xl stat-num">47 min</div>
+          <div class="text-sm text-muted">Avg refund time</div>
+        </div>
+        <div class="card rounded-lg p-4">
+          <div class="text-3xl stat-num">12,481</div>
+          <div class="text-sm text-muted">Picks graded by box score</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Activity ticker -->
+  <div class="border-y border-border bg-panel/50 overflow-hidden">
+    <div class="flex items-center gap-3 py-2.5 max-w-7xl mx-auto px-6">
+      <span class="pill bg-red-500/10 text-red-400 border border-red-500/30 flex items-center gap-1.5 flex-shrink-0"><span class="live-dot"></span>LIVE</span>
+      <div class="overflow-hidden flex-1">
+        <div class="ticker-track flex gap-8 whitespace-nowrap text-xs">
+          <span class="text-zinc-300"><span class="text-accent">●</span> @marcus_b just unlocked a pick from <span class="text-white font-semibold">@strikezone</span></span>
+          <span class="text-zinc-300"><span class="text-accent">●</span> @firstpitch's MLB pick <span class="text-accent font-semibold">HIT</span> — 41 winners</span>
+          <span class="text-zinc-300"><span class="text-accent">●</span> $14.25 auto-refunded to <span class="text-white font-semibold">@samj</span> in 38 minutes</span>
+          <span class="text-zinc-300"><span class="text-accent">●</span> @hoopsedge gained 12 new subscribers</span>
+          <span class="text-zinc-300"><span class="text-accent">●</span> @icecold's NHL pick <span class="text-accent font-semibold">HIT</span> — 22 winners</span>
+          <span class="text-zinc-300"><span class="text-accent">●</span> $4.75 auto-refunded to <span class="text-white font-semibold">@kev</span></span>
+          <span class="text-zinc-300"><span class="text-accent">●</span> @bombsquad just listed an Insured pick</span>
+          <span class="text-zinc-300"><span class="text-accent">●</span> 38 buyers locked in @firstpitch's pick</span>
+          <!-- duplicated for seamless loop -->
+          <span class="text-zinc-300"><span class="text-accent">●</span> @marcus_b just unlocked a pick from <span class="text-white font-semibold">@strikezone</span></span>
+          <span class="text-zinc-300"><span class="text-accent">●</span> @firstpitch's MLB pick <span class="text-accent font-semibold">HIT</span> — 41 winners</span>
+          <span class="text-zinc-300"><span class="text-accent">●</span> $14.25 auto-refunded to <span class="text-white font-semibold">@samj</span> in 38 minutes</span>
+          <span class="text-zinc-300"><span class="text-accent">●</span> @hoopsedge gained 12 new subscribers</span>
+          <span class="text-zinc-300"><span class="text-accent">●</span> @icecold's NHL pick <span class="text-accent font-semibold">HIT</span> — 22 winners</span>
+          <span class="text-zinc-300"><span class="text-accent">●</span> $4.75 auto-refunded to <span class="text-white font-semibold">@kev</span></span>
+          <span class="text-zinc-300"><span class="text-accent">●</span> @bombsquad just listed an Insured pick</span>
+          <span class="text-zinc-300"><span class="text-accent">●</span> 38 buyers locked in @firstpitch's pick</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- First pick free banner -->
+  <div class="bg-gradient-to-r from-accent/10 to-blue-500/10 border-b border-accent/20">
+    <div class="max-w-7xl mx-auto px-6 py-3 flex items-center justify-between flex-wrap gap-2">
+      <div class="text-sm flex items-center gap-2">
+        <i data-lucide="gift" class="icon-md text-accent"></i>
+        <span class="font-semibold text-accent">Your first pick is free.</span>
+        <span class="text-zinc-300">No credit card. See how the refund mechanic works without risking a dollar.</span>
+      </div>
+      <button class="text-xs text-accent hover:underline font-semibold flex items-center gap-1">Claim<i data-lucide="arrow-right" class="icon-sm"></i></button>
+    </div>
+  </div>
+
+  <!-- Filters + Picks -->
+  <section class="max-w-7xl mx-auto px-6 py-10">
+    <div class="flex flex-wrap items-center justify-between gap-4 mb-6">
+      <div class="flex items-center gap-2 overflow-x-auto flex-wrap">
+        <button class="pill bg-panel2 border border-border text-zinc-300 hover:text-white filter-active" data-market-filter="all" onclick="setMarketFilter('all')">All</button>
+        <button class="pill bg-panel2 border border-border text-zinc-300 hover:text-white inline-flex items-center gap-1.5" data-market-filter="following" onclick="setMarketFilter('following')"><i data-lucide="user-check" class="icon-sm"></i>Following <span id="following-count" class="text-[10px] opacity-70">2</span></button>
+        <button class="pill bg-panel2 border border-border text-zinc-300 hover:text-white"><i data-lucide="shield-check" class="icon-sm"></i>Insured only</button>
+        <button class="pill bg-panel2 border border-border text-zinc-300 hover:text-white"><i data-lucide="badge-check" class="icon-sm"></i>Verified only</button>
+        <span class="text-muted text-xs px-1">·</span>
+        <button class="pill bg-panel2 border border-border text-zinc-300 hover:text-white"><i data-lucide="baseball" class="icon-sm"></i>MLB</button>
+        <button class="pill bg-panel2 border border-border text-zinc-300 hover:text-white"><i data-lucide="volleyball" class="icon-sm"></i>NBA</button>
+        <button class="pill bg-panel2 border border-border text-zinc-300 hover:text-white"><i data-lucide="shield" class="icon-sm"></i>NFL</button>
+        <button class="pill bg-panel2 border border-border text-zinc-300 hover:text-white"><i data-lucide="snowflake" class="icon-sm"></i>NHL</button>
+      </div>
+      <div class="flex items-center gap-2 text-sm">
+        <span class="text-muted">Sort:</span>
+        <select class="rounded-md px-3 py-1.5">
+          <option>Trending</option>
+          <option>Highest ROI</option>
+          <option>Hit rate (30d)</option>
+          <option>Newest</option>
+          <option>Lowest price</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="flex items-end justify-between mb-5">
+      <div class="flex items-start gap-3">
+        <span class="accent-bar mt-1.5"></span>
+        <div>
+          <h2 class="text-2xl font-bold tracking-tight text-gradient">Picks dropping today</h2>
+          <p class="text-sm text-muted mt-0.5">All picks lock at game time. Auto-graded by official box scores.</p>
+        </div>
+      </div>
+      <button class="text-sm text-accent hover:underline flex items-center gap-1">View all<i data-lucide="arrow-right" class="icon-sm"></i></button>
+    </div>
+
+    <div id="picks-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5"></div>
+
+    <div class="flex items-end justify-between mt-16 mb-5">
+      <div class="flex items-start gap-3">
+        <span class="accent-bar mt-1.5"></span>
+        <div>
+          <h2 class="text-2xl font-bold tracking-tight text-gradient">Top communities this week</h2>
+          <p class="text-sm text-muted mt-0.5">Sellers ranked by 30-day ROI on tracked picks.</p>
+        </div>
+      </div>
+      <button onclick="showView('leaderboard')" class="text-sm text-accent hover:underline flex items-center gap-1">Full leaderboard<i data-lucide="arrow-right" class="icon-sm"></i></button>
+    </div>
+    <div id="sellers-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5"></div>
+  </section>
+</div>
+
+<!-- ═══════════════ PICK DETAIL VIEW ═══════════════ -->
+<div id="view-pick" class="view">
+  <div class="max-w-6xl mx-auto px-6 py-8">
+    <button onclick="showView('marketplace')" class="text-sm text-muted hover:text-white mb-6 flex items-center gap-1.5"><i data-lucide="arrow-left" class="icon-sm"></i>Back to marketplace</button>
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <!-- Main -->
+      <div class="lg:col-span-2 space-y-4">
+        <!-- Locked pick banner -->
+        <div class="pick-card" data-tilt>
+          <div class="holo-border"></div>
+          <div class="spotlight"></div>
+          <div class="relative gradient-mlb lock-grid scan-line p-10 flex flex-col items-center justify-center text-center min-h-[280px] overflow-hidden">
+            <div class="data-stream" id="detail-stream"></div>
+            <div class="corner-bracket tl"></div><div class="corner-bracket tr"></div>
+            <div class="corner-bracket bl"></div><div class="corner-bracket br"></div>
+            <div class="absolute top-4 left-4 flex items-center gap-2 z-10">
+              <div class="sport-disc text-white"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="12" r="9"/><path d="M5.5 7c2 1.2 3 3 3 5s-1 3.8-3 5M18.5 7c-2 1.2-3 3-3 5s1 3.8 3 5" stroke-dasharray="2 2"/></svg></div>
+              <span class="pill bg-black/50 text-white border border-white/10 backdrop-blur">MLB</span>
+              <span class="pill bg-black/50 text-white/80 border border-white/10 backdrop-blur">Hitter Prop</span>
+            </div>
+            <div class="absolute top-4 right-4 flex items-center gap-2 z-10">
+              <span class="pill bg-accent text-bg flex items-center gap-1"><i data-lucide="shield-check" class="icon-sm"></i>INSURED</span>
+            </div>
+            <div class="lock-cube z-10 mb-4" style="width:72px;height:72px;border-radius:18px"><i data-lucide="lock" class="icon-2xl"></i></div>
+            <div class="text-[10px] uppercase tracking-[0.25em] text-white/55 font-semibold mb-2 flex items-center gap-2 z-10"><span class="w-1 h-1 rounded-full bg-accent animate-pulse"></span>Encrypted · AES-256</div>
+            <div class="text-2xl font-bold text-white mb-1 z-10">The pick is locked</div>
+            <div class="decrypt-text z-10 mb-3" data-decrypt id="detail-decrypt">
+              <span>X</span><span>X</span><span>X</span><span>X</span><span>X</span><span>X</span><span>X</span><span>X</span><span>X</span><span>X</span><span>X</span><span>X</span><span>X</span><span>X</span><span>X</span><span>X</span><span>X</span><span>X</span><span>X</span><span>X</span><span>X</span><span>X</span>
+            </div>
+            <div class="text-sm text-white/70 max-w-md z-10">Player, line, side, suggested book, and stake size — all revealed instantly once paid. Pick locks at game time.</div>
+          </div>
+          <div class="p-4 grid grid-cols-4 gap-3">
+            <div class="bg-panel2 rounded-md p-3 border border-border">
+              <div class="text-[10px] text-muted uppercase tracking-wider flex items-center gap-1"><i data-lucide="map-pin" class="icon-sm"></i>Game</div>
+              <div class="text-sm font-semibold mt-1">NYY vs BOS</div>
+              <div class="text-[10px] text-muted">Yankee Stadium</div>
+            </div>
+            <div class="bg-panel2 rounded-md p-3 border border-border">
+              <div class="text-[10px] text-muted uppercase tracking-wider flex items-center gap-1"><i data-lucide="timer" class="icon-sm"></i>Locks in</div>
+              <div class="text-sm font-mono font-semibold mt-1 text-yellow-300" id="detail-countdown">2h 14m</div>
+              <div class="text-[10px] text-muted">7:05 PM ET</div>
+            </div>
+            <div class="bg-panel2 rounded-md p-3 border border-border">
+              <div class="text-[10px] text-muted uppercase tracking-wider flex items-center gap-1"><i data-lucide="zap" class="icon-sm"></i>Edge</div>
+              <div class="text-sm font-semibold text-accent mt-1">+8.4%</div>
+              <div class="text-[10px] text-muted">Model vs market</div>
+            </div>
+            <div class="bg-panel2 rounded-md p-3 border border-border">
+              <div class="text-[10px] text-muted uppercase tracking-wider flex items-center gap-1"><i data-lucide="signal" class="icon-sm"></i>Odds</div>
+              <div class="text-sm font-mono font-semibold mt-1">+105 / +130</div>
+              <div class="text-[10px] text-muted">Range across books</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Signal panel -->
+        <div class="card rounded-lg p-5">
+          <div class="flex items-center gap-2 mb-3">
+            <span class="accent-bar"></span>
+            <h3 class="font-semibold flex items-center gap-2">Public signals</h3>
+            <span class="text-[10px] text-muted">live · last updated 12s ago</span>
+          </div>
+          <div class="flex flex-wrap gap-2 mb-4">
+            <span class="signal-badge signal-hot"><i data-lucide="flame" class="icon-sm"></i>Hot — seller 7-of-10</span>
+            <span class="signal-badge signal-sharp"><i data-lucide="trending-up" class="icon-sm"></i>Sharp — line moved with seller</span>
+            <span class="signal-badge signal-pocket"><i data-lucide="target" class="icon-sm"></i>Pocket — model edge in seller's wheelhouse</span>
+          </div>
+          <div class="grid grid-cols-3 gap-3 text-center">
+            <div class="bg-panel2 rounded p-3 border border-border"><div class="text-[10px] text-muted uppercase">Buyers tonight</div><div class="stat-num text-xl text-white mt-1">38</div></div>
+            <div class="bg-panel2 rounded p-3 border border-border"><div class="text-[10px] text-muted uppercase">Watching now</div><div class="stat-num text-xl text-red-400 mt-1 flex items-center justify-center gap-1.5"><span class="view-pulse-dot"></span>14</div></div>
+            <div class="bg-panel2 rounded p-3 border border-border"><div class="text-[10px] text-muted uppercase">Seller stake</div><div class="stat-num text-xl text-accent mt-1">$120</div></div>
+          </div>
+        </div>
+
+        <!-- Reasoning placeholder -->
+        <div class="card rounded-lg p-6 relative overflow-hidden">
+          <div class="absolute inset-0 pointer-events-none" style="background:repeating-linear-gradient(45deg,transparent,transparent 8px,rgba(255,255,255,0.015) 8px,rgba(255,255,255,0.015) 16px);"></div>
+          <h3 class="font-semibold mb-3 flex items-center gap-2 relative"><i data-lucide="file-lock-2" class="icon-md text-accent"></i>Full reasoning <span class="text-xs text-muted font-normal">(unlocks after purchase)</span></h3>
+          <div class="space-y-2 relative">
+            <div class="skeleton-bar h-3 rounded w-full"></div>
+            <div class="skeleton-bar h-3 rounded w-11/12"></div>
+            <div class="skeleton-bar h-3 rounded w-4/5"></div>
+            <div class="skeleton-bar h-3 rounded w-full"></div>
+            <div class="skeleton-bar h-3 rounded w-3/4"></div>
+          </div>
+          <div class="mt-4 text-xs text-muted relative">Buy to see the full breakdown, suggested book, stake size, and live alerts if the line moves before lock.</div>
+        </div>
+
+        <!-- Seller's track record -->
+        <div class="card rounded-lg p-6">
+          <div class="flex items-center justify-between mb-4">
+            <h3 class="font-semibold flex items-center gap-2"><i data-lucide="line-chart" class="icon-md text-accent"></i>Seller's MLB record (last 30 days)</h3>
+            <button onclick="showView('seller-profile')" class="text-xs text-accent hover:underline flex items-center gap-1">Full profile<i data-lucide="arrow-right" class="icon-sm"></i></button>
+          </div>
+          <div class="grid grid-cols-4 gap-3 mb-4">
+            <div class="bg-panel2 rounded p-3"><div class="text-[10px] text-muted uppercase">Picks</div><div class="stat-num text-xl mt-1">47</div></div>
+            <div class="bg-panel2 rounded p-3"><div class="text-[10px] text-muted uppercase">Hit rate</div><div class="stat-num text-xl text-accent mt-1">61.7%</div></div>
+            <div class="bg-panel2 rounded p-3"><div class="text-[10px] text-muted uppercase">ROI</div><div class="stat-num text-xl text-accent mt-1">+18.2%</div></div>
+            <div class="bg-panel2 rounded p-3"><div class="text-[10px] text-muted uppercase">Units</div><div class="stat-num text-xl text-accent mt-1">+12.4u</div></div>
+          </div>
+          <div class="flex items-center gap-2 mt-2">
+            <span class="text-[10px] text-muted uppercase tracking-wider">Last 10:</span>
+            <span class="streak-dots">
+              <span class="streak-dot streak-W"></span><span class="streak-dot streak-W"></span><span class="streak-dot streak-L"></span><span class="streak-dot streak-W"></span><span class="streak-dot streak-W"></span><span class="streak-dot streak-W"></span><span class="streak-dot streak-L"></span><span class="streak-dot streak-W"></span><span class="streak-dot streak-W"></span><span class="streak-dot streak-W"></span>
+            </span>
+            <span class="text-[10px] text-accent ml-2 font-mono">8W · 2L</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Sidebar buy box -->
+      <div class="space-y-4">
+        <div class="card rounded-lg p-6 sticky top-20 glow relative overflow-hidden">
+          <div class="flex items-center gap-3 mb-4">
+            <div class="w-11 h-11 rounded-full bg-gradient-to-br from-accent to-blue-500 flex items-center justify-center text-bg font-bold">F</div>
+            <div>
+              <div class="font-semibold flex items-center gap-1">@firstpitch <i data-lucide="check-circle-2" class="icon-sm text-accent"></i></div>
+              <div class="text-[11px] text-muted">Pikkit-verified · 4 mo history</div>
+            </div>
+          </div>
+          <div class="flex items-baseline gap-2 mb-1">
+            <div class="text-4xl font-bold text-gradient">$5</div>
+            <div class="text-xs text-muted">one-time</div>
+          </div>
+          <div class="text-[11px] text-muted mb-4 flex items-center gap-1.5"><i data-lucide="shield-check" class="icon-sm text-accent"></i>Single pick · Insured tier</div>
+
+          <div class="bg-accent/5 border border-accent/30 rounded-md p-3 mb-4">
+            <div class="flex items-center gap-2 text-sm font-semibold text-accent">
+              <i data-lucide="shield-check" class="icon-md"></i>Money-back if it loses
+            </div>
+            <div class="text-xs text-zinc-400 mt-1.5">$4.75 auto-refunds within 1h of game ending. Seller has <span class="text-accent font-semibold">$120 staked</span> on this pick.</div>
+            <div class="stake-bar mt-2"><div class="stake-bar-fill" style="width:48%"></div></div>
+          </div>
+
+          <button onclick="openBuyModal()" class="btn-primary unlock-btn w-full py-3 rounded-md mb-2 flex items-center justify-center gap-2"><i data-lucide="unlock" class="icon-md"></i>Unlock pick — $5</button>
+          <button class="btn-ghost w-full py-3 rounded-md text-sm flex items-center justify-center gap-2"><i data-lucide="bookmark-plus" class="icon-sm"></i>Subscribe — $29/mo</button>
+
+          <div class="mt-4 pt-4 border-t border-border space-y-2 text-xs">
+            <div class="flex justify-between"><span class="text-muted">Pick locks at</span><span class="text-white font-mono">7:00 PM ET</span></div>
+            <div class="flex justify-between"><span class="text-muted">Refund if lost</span><span class="text-accent font-mono">95%</span></div>
+            <div class="flex justify-between"><span class="text-muted">Platform fee</span><span class="text-white font-mono">5%</span></div>
+            <div class="flex justify-between"><span class="text-muted">Buyers so far</span><span class="text-white font-mono">38</span></div>
+            <div class="flex justify-between"><span class="text-muted flex items-center gap-1"><span class="view-pulse-dot"></span>Watching</span><span class="text-red-400 font-mono">14 live</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════ SELLER PROFILE VIEW ═══════════════ -->
+<div id="view-seller-profile" class="view">
+  <div class="max-w-6xl mx-auto px-6 py-8">
+    <button onclick="showView('marketplace')" class="text-sm text-muted hover:text-white mb-6">← Back</button>
+    <div class="profile-hero">
+      <div class="profile-banner gradient-mlb">
+        <div class="rc-scan"></div>
+        <div class="data-stream" id="profile-stream"></div>
+        <div class="rc-corner tl"></div><div class="rc-corner tr"></div>
+        <div class="absolute top-4 right-4 flex gap-2">
+          <span class="pill bg-black/50 text-accent border border-accent/30 backdrop-blur flex items-center gap-1"><i data-lucide="check-circle-2" class="icon-sm"></i>VERIFIED</span>
+          <span class="pill bg-black/50 text-purple-300 border border-purple-500/40 backdrop-blur flex items-center gap-1"><i data-lucide="crown" class="icon-sm"></i>TOP 1%</span>
+        </div>
+      </div>
+      <div class="profile-body">
+        <div class="profile-avatar">D</div>
+        <div class="flex-1 min-w-0">
+          <div class="flex items-center gap-2 mb-1">
+            <h1 class="text-2xl font-bold">@diamondking</h1>
+            <i data-lucide="check-circle-2" class="icon-md text-accent"></i>
+          </div>
+          <div class="text-sm text-muted flex items-center gap-3 flex-wrap">
+            <span class="flex items-center gap-1"><i data-lucide="baseball" class="icon-sm"></i>MLB specialist</span>
+            <span>·</span>
+            <span class="flex items-center gap-1"><i data-lucide="calendar" class="icon-sm"></i>Joined Mar 2025</span>
+            <span>·</span>
+            <span class="flex items-center gap-1"><i data-lucide="users" class="icon-sm"></i>1,247 followers</span>
+          </div>
+        </div>
+        <div class="flex gap-2">
+          <button onclick="toggleFollow('@diamondking',this)" data-follow="@diamondking" class="follow-btn px-5 py-2.5 rounded-md text-sm flex items-center gap-1.5">
+            <i data-lucide="user-plus" class="icon-sm"></i><span class="follow-label">Follow</span>
+          </button>
+          <button class="btn-primary px-5 py-2.5 rounded-md text-sm">Subscribe — $79/mo</button>
+        </div>
+      </div>
+
+      <div class="profile-stats">
+        <div class="profile-stat"><div class="text-[10px] text-muted uppercase tracking-wider">Lifetime ROI</div><div class="stat-num text-2xl text-accent mt-1">+14.8%</div></div>
+        <div class="profile-stat"><div class="text-[10px] text-muted uppercase tracking-wider">Hit rate</div><div class="stat-num text-2xl mt-1">59.2%</div></div>
+        <div class="profile-stat"><div class="text-[10px] text-muted uppercase tracking-wider">Total picks</div><div class="stat-num text-2xl mt-1">847</div></div>
+        <div class="profile-stat"><div class="text-[10px] text-muted uppercase tracking-wider">Units won</div><div class="stat-num text-2xl text-accent mt-1">+98.3</div></div>
+        <div class="profile-stat"><div class="text-[10px] text-muted uppercase tracking-wider">Stake balance</div><div class="stat-num text-2xl mt-1">$2,400</div></div>
+      </div>
+    </div>
+
+    <!-- Tabs -->
+    <div class="flex border-b border-border mb-6 gap-6 text-sm">
+      <button class="py-3 tab-active">Active picks (3)</button>
+      <button class="py-3 tab-inactive">History (847)</button>
+      <button class="py-3 tab-inactive">Performance chart</button>
+      <button class="py-3 tab-inactive">Reviews (213)</button>
+    </div>
+
+    <div id="seller-picks" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"></div>
+
+    <div class="card rounded-lg p-6 mt-8">
+      <h3 class="font-semibold mb-4">Performance over time</h3>
+      <div class="h-48 flex items-end gap-1">
+        <!-- mock chart -->
+        <script>
+          // chart rendered by JS below
+        </script>
+        <div id="perf-chart" class="flex items-end gap-1 w-full h-full"></div>
+      </div>
+      <div class="flex justify-between text-xs text-muted mt-3">
+        <span>Mar '25</span><span>Apr '25</span><span>May '25</span><span>Jun '25</span><span>Now</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════ LEADERBOARD VIEW ═══════════════ -->
+<div id="view-leaderboard" class="view">
+  <div class="max-w-6xl mx-auto px-6 py-8">
+    <h1 class="text-3xl font-bold mb-2">Leaderboard</h1>
+    <p class="text-muted mb-6">Ranked by 30-day ROI. All picks verified by official box scores.</p>
+
+    <div class="flex flex-wrap gap-2 mb-6">
+      <button class="pill bg-accent text-bg">All sports</button>
+      <button class="pill bg-panel2 border border-border text-zinc-300">MLB</button>
+      <button class="pill bg-panel2 border border-border text-zinc-300">NBA</button>
+      <button class="pill bg-panel2 border border-border text-zinc-300">NFL</button>
+      <span class="mx-2 text-muted">|</span>
+      <button class="pill bg-panel2 border border-border text-zinc-300">7d</button>
+      <button class="pill bg-accent text-bg">30d</button>
+      <button class="pill bg-panel2 border border-border text-zinc-300">90d</button>
+      <button class="pill bg-panel2 border border-border text-zinc-300">All-time</button>
+    </div>
+
+    <div id="leaderboard-grid" class="grid grid-cols-1 md:grid-cols-2 gap-4"></div>
+  </div>
+</div>
+
+<!-- ═══════════════ SELLER DASHBOARD VIEW ═══════════════ -->
+<div id="view-dashboard" class="view">
+  <div class="max-w-6xl mx-auto px-6 py-8">
+    <div class="section-hero mb-6 flex flex-wrap justify-between items-center gap-4">
+      <div class="relative z-10">
+        <div class="flex items-center gap-2 mb-2">
+          <span class="pill bg-accent/15 text-accent border border-accent/30 inline-flex items-center gap-1.5"><span class="live-dot live-dot-green"></span>SELLER</span>
+          <span class="text-xs text-muted">Account in good standing</span>
+        </div>
+        <h1 class="text-3xl font-bold tracking-tight">Seller Dashboard</h1>
+        <p class="text-muted text-sm mt-1">Your earnings, stake, and active picks — at a glance.</p>
+      </div>
+      <button onclick="openPostPickModal()" class="btn-primary px-5 py-2.5 rounded-md inline-flex items-center gap-2 relative z-10"><i data-lucide="plus" class="icon-sm"></i>Post a pick</button>
+    </div>
+
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+      <div class="stat-tile" style="--tile-accent: #22c55e;">
+        <div class="stat-tile-label">Earnings · 30d</div>
+        <div class="stat-tile-value text-accent">+$1,847</div>
+        <div class="stat-tile-sub">From 84 sales</div>
+      </div>
+      <div class="stat-tile" style="--tile-accent: #3b82f6;">
+        <div class="stat-tile-label">Hit rate · 30d</div>
+        <div class="stat-tile-value">61.7%</div>
+        <div class="stat-tile-sub">29W · 18L</div>
+      </div>
+      <div class="stat-tile" style="--tile-accent: #a855f7;">
+        <div class="stat-tile-label">Stake balance</div>
+        <div class="stat-tile-value">$2,400</div>
+        <div class="stat-tile-sub text-accent">Healthy</div>
+      </div>
+      <div class="stat-tile" style="--tile-accent: #ef4444;">
+        <div class="stat-tile-label">Refunds paid</div>
+        <div class="stat-tile-value">$340</div>
+        <div class="stat-tile-sub">From 18 lost picks</div>
+      </div>
+    </div>
+
+    <div class="flex items-center gap-3 mb-3">
+      <div class="accent-bar"></div>
+      <h2 class="text-lg font-semibold">Active picks</h2>
+      <span class="pill bg-blue-500/10 text-blue-400 border border-blue-500/30 inline-flex items-center gap-1.5"><span class="live-dot"></span>3 LIVE</span>
+    </div>
+    <div class="grid gap-3 mb-10">
+      <div class="ap-card">
+        <div><div class="ap-label">Pick</div><div class="font-semibold text-sm">Judge O1.5 TB</div></div>
+        <div><div class="ap-label">Starts</div><div class="ap-val text-muted">2h 14m</div></div>
+        <div><div class="ap-label">Buyers</div><div class="ap-val">38</div></div>
+        <div><div class="ap-label">Revenue</div><div class="ap-val text-accent">$456</div></div>
+        <div><div class="ap-label">Stake at risk</div><div class="ap-val">$30</div></div>
+        <div class="text-right"><span class="pill bg-blue-500/10 text-blue-400 border border-blue-500/30 inline-flex items-center gap-1"><span class="live-dot"></span>Live</span></div>
+      </div>
+      <div class="ap-card">
+        <div><div class="ap-label">Pick</div><div class="font-semibold text-sm">Soto O1.5 hits</div></div>
+        <div><div class="ap-label">Starts</div><div class="ap-val text-muted">4h</div></div>
+        <div><div class="ap-label">Buyers</div><div class="ap-val">22</div></div>
+        <div><div class="ap-label">Revenue</div><div class="ap-val text-accent">$220</div></div>
+        <div><div class="ap-label">Stake at risk</div><div class="ap-val">$25</div></div>
+        <div class="text-right"><span class="pill bg-blue-500/10 text-blue-400 border border-blue-500/30 inline-flex items-center gap-1"><span class="live-dot"></span>Live</span></div>
+      </div>
+      <div class="ap-card">
+        <div><div class="ap-label">Pick</div><div class="font-semibold text-sm">Yankees ML -1.5</div></div>
+        <div><div class="ap-label">Starts</div><div class="ap-val text-muted">2h 14m</div></div>
+        <div><div class="ap-label">Buyers</div><div class="ap-val">14</div></div>
+        <div><div class="ap-label">Revenue</div><div class="ap-val text-accent">$140</div></div>
+        <div><div class="ap-label">Stake at risk</div><div class="ap-val">$20</div></div>
+        <div class="text-right"><span class="pill bg-blue-500/10 text-blue-400 border border-blue-500/30 inline-flex items-center gap-1"><span class="live-dot"></span>Live</span></div>
+      </div>
+    </div>
+
+    <div class="flex items-center gap-3 mb-3">
+      <div class="accent-bar"></div>
+      <h2 class="text-lg font-semibold">Recent results</h2>
+    </div>
+    <div class="grid gap-3">
+      <div class="ap-card" style="grid-template-columns: 1.4fr 1fr 1fr 1fr;">
+        <div><div class="ap-label">Pick</div><div class="font-semibold text-sm">Ohtani O1.5 TB</div></div>
+        <div><div class="ap-label">Result</div><span class="pill bg-accent/15 text-accent border border-accent/30">WON · 3 TB</span></div>
+        <div><div class="ap-label">Buyers</div><div class="ap-val">42</div></div>
+        <div><div class="ap-label">Net</div><div class="ap-val text-accent">+$478</div></div>
+      </div>
+      <div class="ap-card" style="grid-template-columns: 1.4fr 1fr 1fr 1fr;">
+        <div><div class="ap-label">Pick</div><div class="font-semibold text-sm">Acuña SB</div></div>
+        <div><div class="ap-label">Result</div><span class="pill bg-red-500/10 text-red-400 border border-red-500/30">LOST · 0 SB</span></div>
+        <div><div class="ap-label">Buyers</div><div class="ap-val">19</div></div>
+        <div><div class="ap-label">Net</div><div class="ap-val text-red-400">−$15</div></div>
+      </div>
+      <div class="ap-card" style="grid-template-columns: 1.4fr 1fr 1fr 1fr;">
+        <div><div class="ap-label">Pick</div><div class="font-semibold text-sm">Cole O7.5 K</div></div>
+        <div><div class="ap-label">Result</div><span class="pill bg-accent/15 text-accent border border-accent/30">WON · 9 K</span></div>
+        <div><div class="ap-label">Buyers</div><div class="ap-val">31</div></div>
+        <div><div class="ap-label">Net</div><div class="ap-val text-accent">+$352</div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════ HOW IT WORKS VIEW ═══════════════ -->
+<div id="view-how" class="view">
+  <div class="max-w-4xl mx-auto px-6 py-12">
+    <div class="section-hero mb-10">
+      <div class="relative z-10">
+        <span class="pill bg-accent/15 text-accent border border-accent/30 inline-flex items-center gap-1.5"><i data-lucide="shield-check" class="icon-sm"></i>HOW IT WORKS</span>
+        <h1 class="text-4xl md:text-5xl font-bold tracking-tight mt-4 mb-3">Skin in the game.<br/>Money back on losses.</h1>
+        <p class="text-muted text-base max-w-2xl">A picks marketplace where sellers stake their own capital — so you don't have to gamble on whether they're real.</p>
+      </div>
+    </div>
+
+    <div class="space-y-4">
+      <div class="step-card">
+        <div class="step-num">1</div>
+        <div>
+          <h3 class="font-semibold text-lg mb-1.5">Sellers post a pick AND stake their own money</h3>
+          <p class="text-muted text-sm leading-relaxed">Every listing requires the seller to put up capital from their stake balance. They can't sell picks they don't believe in.</p>
+        </div>
+      </div>
+      <div class="step-card">
+        <div class="step-num">2</div>
+        <div>
+          <h3 class="font-semibold text-lg mb-1.5">You buy the pick — payment held in escrow</h3>
+          <p class="text-muted text-sm leading-relaxed">PicksVault holds your payment until the game settles. Pick details unlock immediately so you can place your bet.</p>
+        </div>
+      </div>
+      <div class="step-card">
+        <div class="step-num">3</div>
+        <div>
+          <h3 class="font-semibold text-lg mb-1.5">Game ends → official box score auto-grades it</h3>
+          <p class="text-muted text-sm leading-relaxed">No human review. We pull final stats from the official feed within an hour of the final whistle.</p>
+        </div>
+      </div>
+      <div class="step-card">
+        <div class="step-num">4</div>
+        <div>
+          <h3 class="font-semibold text-lg mb-1.5">Win → seller paid. Loss → you refunded.</h3>
+          <p class="text-muted text-sm leading-relaxed">If the pick hits, seller gets paid (minus 5% fee). If it loses, you get 95% back automatically and the seller's stake is slashed.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="step-card mt-10" style="border-color: rgba(34,197,94,0.4);">
+      <div class="step-num"><i data-lucide="zap" style="width:20px;height:20px;"></i></div>
+      <div>
+        <h3 class="font-semibold text-lg mb-1.5">Why this works</h3>
+        <p class="text-muted text-sm leading-relaxed">Traditional pick sellers profit by selling to large audiences regardless of accuracy. PicksVault's stake mechanism makes that economically impossible — losing sellers run out of stake and are forced off the platform. Only sellers with a real edge can sustain selling here.</p>
+      </div>
+    </div>
+
+    <!-- Edge cases -->
+    <div class="flex items-center gap-3 mt-14 mb-3">
+      <div class="accent-bar"></div>
+      <h2 class="text-2xl font-bold">Edge cases, handled.</h2>
+    </div>
+    <p class="text-muted mb-6">Real sportsbooks have rules for messy outcomes. We mirror them so the marketplace stays predictable.</p>
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div class="edge-card">
+        <div class="flex items-center gap-3 mb-2"><div class="edge-icon">⏸️</div><h3 class="font-semibold">Postponed game</h3></div>
+        <p class="text-sm text-muted leading-relaxed">Pick is rolled to the rescheduled game automatically. If the game isn't played within 7 days, full refund to buyer + stake returned to seller.</p>
+      </div>
+      <div class="edge-card">
+        <div class="flex items-center gap-3 mb-2"><div class="edge-icon">↔️</div><h3 class="font-semibold">Push (exact line)</h3></div>
+        <p class="text-sm text-muted leading-relaxed">Total bases of exactly 1.5? Impossible. But for whole-number lines, a push refunds the buyer 100% with no stake slash for the seller. Counts as N/A in their record.</p>
+      </div>
+      <div class="edge-card">
+        <div class="flex items-center gap-3 mb-2"><div class="edge-icon">🩹</div><h3 class="font-semibold">Player scratched / DNP</h3></div>
+        <p class="text-sm text-muted leading-relaxed">If the player doesn't appear in the game, the pick voids. Full buyer refund, stake returned, no rating impact.</p>
+      </div>
+      <div class="edge-card">
+        <div class="flex items-center gap-3 mb-2"><div class="edge-icon">📉</div><h3 class="font-semibold">Line moved drastically</h3></div>
+        <p class="text-sm text-muted leading-relaxed">If the market line moves &gt;10% from the seller's quoted line before the pick locks, buyers get a 1-click cancel option. Seller can void and re-list.</p>
+      </div>
+      <div class="edge-card">
+        <div class="flex items-center gap-3 mb-2"><div class="edge-icon">⚖️</div><h3 class="font-semibold">Disputed grade</h3></div>
+        <p class="text-sm text-muted leading-relaxed">Box scores disagree? Stat correction post-game? We use the official league feed as source of truth, with a 24h dispute window for both sides to flag obvious errors.</p>
+      </div>
+      <div class="edge-card">
+        <div class="flex items-center gap-3 mb-2"><div class="edge-icon">🚫</div><h3 class="font-semibold">Suspected collusion</h3></div>
+        <p class="text-sm text-muted leading-relaxed">A seller can't buy their own picks. Sellers need a minimum buyer count + IP/device diversity before stakes are slashed. Pattern detection flags wash trading.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════ MY PICKS (BUYER) VIEW ═══════════════ -->
+<div id="view-mypicks" class="view">
+  <div class="max-w-6xl mx-auto px-6 py-8">
+    <div class="flex items-center justify-between mb-6">
+      <div>
+        <h1 class="text-3xl font-bold">My Picks</h1>
+        <p class="text-muted text-sm mt-1">Everything you've bought, refunds processed automatically.</p>
+      </div>
+      <button onclick="showView('marketplace')" class="btn-primary px-4 py-2 rounded-md text-sm">+ Browse picks</button>
+    </div>
+
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+      <div class="card rounded-lg p-5"><div class="text-xs text-muted">Total spent</div><div class="stat-num text-2xl">$486</div><div class="text-xs text-muted mt-1">42 picks bought</div></div>
+      <div class="card rounded-lg p-5"><div class="text-xs text-muted">Auto-refunded</div><div class="stat-num text-2xl text-accent">$184</div><div class="text-xs text-muted mt-1">From 17 lost picks</div></div>
+      <div class="card rounded-lg p-5"><div class="text-xs text-muted">Hit rate</div><div class="stat-num text-2xl">59.5%</div><div class="text-xs text-muted mt-1">25W · 17L</div></div>
+      <div class="card rounded-lg p-5"><div class="text-xs text-muted">Net cost</div><div class="stat-num text-2xl">$302</div><div class="text-xs text-muted mt-1">$7.20 / winning pick</div></div>
+    </div>
+
+    <div class="flex border-b border-border mb-6 gap-6 text-sm">
+      <button class="py-3 tab-active" data-mp-tab="all">All <span class="text-muted ml-1">42</span></button>
+      <button class="py-3 tab-inactive" data-mp-tab="pending">Pending <span class="text-muted ml-1">3</span></button>
+      <button class="py-3 tab-inactive" data-mp-tab="won">Won <span class="text-muted ml-1">25</span></button>
+      <button class="py-3 tab-inactive" data-mp-tab="lost">Lost / Refunded <span class="text-muted ml-1">17</span></button>
+    </div>
+
+    <div id="mypicks-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5"></div>
+  </div>
+</div>
+
+<!-- ═══════════════ BOOKMARKS VIEW ═══════════════ -->
+<div id="view-bookmarks" class="view">
+  <div class="max-w-6xl mx-auto px-6 py-8">
+    <div class="flex items-center justify-between mb-6">
+      <div>
+        <h1 class="text-3xl font-bold flex items-center gap-3"><i data-lucide="bookmark" class="icon-lg text-accent"></i>Bookmarks</h1>
+        <p class="text-muted text-sm mt-1">Track picks you're watching. See if they hit before you commit.</p>
+      </div>
+      <button onclick="showView('marketplace')" class="btn-ghost px-4 py-2 rounded-md text-sm">Browse marketplace</button>
+    </div>
+
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+      <div class="card rounded-lg p-5"><div class="text-xs text-muted">Tracking</div><div class="stat-num text-2xl" id="bk-stat-tracking">3</div><div class="text-xs text-muted mt-1">Active bookmarks</div></div>
+      <div class="card rounded-lg p-5"><div class="text-xs text-muted">Settled</div><div class="stat-num text-2xl" id="bk-stat-settled">5</div><div class="text-xs text-muted mt-1">From last 14 days</div></div>
+      <div class="card rounded-lg p-5"><div class="text-xs text-muted">Would-be hit rate</div><div class="stat-num text-2xl text-accent">60.0%</div><div class="text-xs text-muted mt-1">3W · 2L on bookmarks</div></div>
+      <div class="card rounded-lg p-5"><div class="text-xs text-muted">Hypothetical P/L</div><div class="stat-num text-2xl text-accent">+$18.40</div><div class="text-xs text-muted mt-1">If you'd bought all</div></div>
+    </div>
+
+    <div class="flex border-b border-border mb-6 gap-6 text-sm">
+      <button class="py-3 tab-active" data-bk-tab="active">Active <span class="text-muted ml-1" id="bk-count-active">3</span></button>
+      <button class="py-3 tab-inactive" data-bk-tab="settled">Settled <span class="text-muted ml-1" id="bk-count-settled">5</span></button>
+    </div>
+
+    <div id="bk-empty" class="card rounded-lg p-12 text-center hidden">
+      <i data-lucide="bookmark" class="icon-xl text-muted mx-auto mb-3"></i>
+      <div class="font-semibold mb-1">No bookmarks yet</div>
+      <div class="text-muted text-sm mb-4">Tap the bookmark icon on any pick to track it without buying.</div>
+      <button onclick="showView('marketplace')" class="btn-primary px-4 py-2 rounded-md text-sm">Browse picks</button>
+    </div>
+
+    <div id="bk-active" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5"></div>
+    <div id="bk-settled" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 hidden"></div>
+  </div>
+</div>
+
+<!-- ═══════════════ LIVE GRADING VIEW ═══════════════ -->
+<div id="view-grading" class="view">
+  <div class="max-w-5xl mx-auto px-6 py-8">
+    <button onclick="showView('mypicks')" class="text-sm text-muted hover:text-white mb-6 inline-flex items-center gap-1.5"><i data-lucide="arrow-left" class="icon-sm"></i>Back to My Picks</button>
+
+    <div class="grading-hero mb-6">
+      <div class="flex items-start justify-between mb-5 gap-4">
+        <div>
+          <div class="flex items-center gap-2 mb-3">
+            <span class="pill bg-red-500/15 text-red-300 border border-red-500/40 flex items-center gap-1.5"><span class="live-dot"></span>LIVE</span>
+            <span class="pill bg-blue-500/15 text-blue-300 border border-blue-500/40">⚾ MLB</span>
+            <span class="text-xs text-zinc-300">Top 6th</span>
+          </div>
+          <h1 class="text-3xl font-bold tracking-tight text-white">Aaron Judge — Over 1.5 Total Bases</h1>
+          <p class="text-zinc-300 text-sm mt-1.5">NYY vs BOS · Yankee Stadium</p>
+        </div>
+        <div class="text-right flex-shrink-0">
+          <div class="text-[10px] text-zinc-400 uppercase tracking-wider">Score</div>
+          <div class="stat-num text-3xl text-white mt-1">NYY 4 — 2 BOS</div>
+        </div>
+      </div>
+
+      <!-- Live progress bar -->
+      <div class="rounded-lg p-4 mt-2" style="background: rgba(0,0,0,0.35); border: 1px solid rgba(255,255,255,0.08);">
+        <div class="flex items-center justify-between mb-2">
+          <span class="text-sm text-zinc-200">Judge's total bases tonight</span>
+          <span id="grading-status" class="text-sm font-semibold text-accent">2 / 1.5 → ✅ HITTING</span>
+        </div>
+        <div class="h-3 rounded-full overflow-hidden" style="background: rgba(0,0,0,0.5);">
+          <div id="grading-bar" class="h-full transition-all" style="width: 100%; background: linear-gradient(90deg, #16a34a, #22c55e, #4ade80); box-shadow: 0 0 14px rgba(34,197,94,0.6);"></div>
+        </div>
+        <div class="flex justify-between text-xs text-zinc-400 mt-1.5">
+          <span>0</span><span>Line: 1.5</span><span>4 (max possible)</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <!-- Live AB log -->
+      <div class="card rounded-lg p-5 lg:col-span-2">
+        <h3 class="font-semibold mb-4 flex items-center gap-2"><span class="w-1 h-4 bg-accent rounded"></span> Judge's at-bats tonight</h3>
+        <div class="space-y-3">
+          <div class="flex items-center justify-between bg-panel2 rounded-md p-3">
+            <div>
+              <div class="text-sm font-medium">Top 1st · vs Whitlock</div>
+              <div class="text-xs text-muted">2-1 count, 94mph fastball</div>
+            </div>
+            <div class="text-right">
+              <span class="pill bg-accent/10 text-accent">DOUBLE</span>
+              <div class="stat-num text-sm mt-1">+2 TB</div>
+            </div>
+          </div>
+          <div class="flex items-center justify-between bg-panel2 rounded-md p-3">
+            <div>
+              <div class="text-sm font-medium">Top 3rd · vs Whitlock</div>
+              <div class="text-xs text-muted">0-2 count, slider away</div>
+            </div>
+            <div class="text-right">
+              <span class="pill bg-zinc-500/10 text-zinc-400">K (looking)</span>
+              <div class="stat-num text-sm mt-1">+0 TB</div>
+            </div>
+          </div>
+          <div class="flex items-center justify-between bg-panel2 rounded-md p-3 border border-accent/30">
+            <div>
+              <div class="text-sm font-medium">Top 5th · vs Bernardino</div>
+              <div class="text-xs text-muted">Walk on 4 pitches</div>
+            </div>
+            <div class="text-right">
+              <span class="pill bg-zinc-500/10 text-zinc-400">BB</span>
+              <div class="stat-num text-sm mt-1">+0 TB</div>
+            </div>
+          </div>
+          <div class="flex items-center justify-between bg-panel2 rounded-md p-3 opacity-50">
+            <div>
+              <div class="text-sm font-medium">Top 7th (projected)</div>
+              <div class="text-xs text-muted">vs Jansen (RHP)</div>
+            </div>
+            <div class="text-right text-xs text-muted">— upcoming</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Auto-grade panel -->
+      <div class="card rounded-lg p-5 space-y-4">
+        <h3 class="font-semibold flex items-center gap-2"><span class="w-1 h-4 bg-accent rounded"></span> Auto-grade engine</h3>
+        <div class="bg-panel2 rounded-md p-3 space-y-2 text-xs">
+          <div class="flex justify-between"><span class="text-muted">Source</span><span class="font-mono">MLB Stats API</span></div>
+          <div class="flex justify-between"><span class="text-muted">Polling</span><span class="font-mono">every 15s</span></div>
+          <div class="flex justify-between"><span class="text-muted">Last update</span><span class="font-mono text-accent">3s ago</span></div>
+          <div class="flex justify-between"><span class="text-muted">Grade trigger</span><span class="font-mono">final box</span></div>
+        </div>
+
+        <div class="border-t border-border pt-4">
+          <div class="text-xs text-muted mb-2">Settlement preview</div>
+          <div class="space-y-2 text-sm">
+            <div class="flex justify-between"><span>If pick wins</span><span class="text-accent stat-num">$0 refund</span></div>
+            <div class="flex justify-between"><span>If pick loses</span><span class="text-accent stat-num">$11.40 refund</span></div>
+            <div class="flex justify-between"><span>Push (impossible here)</span><span class="text-muted stat-num">$12.00 refund</span></div>
+            <div class="flex justify-between"><span>Game suspended &gt;7d</span><span class="text-muted stat-num">$12.00 refund</span></div>
+          </div>
+        </div>
+
+        <div class="bg-accent/5 border border-accent/30 rounded-md p-3 text-xs">
+          ⚡ As soon as the box score is final, your refund (if applicable) will hit your card within 60 minutes. No support ticket required.
+        </div>
+      </div>
+    </div>
+
+    <!-- Stake watcher -->
+    <div class="card rounded-lg p-5 mt-6">
+      <h3 class="font-semibold mb-3 flex items-center gap-2"><span class="w-1 h-4 bg-accent rounded"></span> Seller's stake at risk</h3>
+      <div class="grid grid-cols-3 gap-4 text-sm">
+        <div><div class="text-xs text-muted">Stake committed</div><div class="stat-num text-lg">$30</div></div>
+        <div><div class="text-xs text-muted">Buyers covered</div><div class="stat-num text-lg">38 ($433.20 in escrow)</div></div>
+        <div><div class="text-xs text-muted">Seller's exposure</div><div class="stat-num text-lg text-accent">$30 + reputation</div></div>
+      </div>
+      <p class="text-xs text-muted mt-3">If this loses, $30 from @diamondking is slashed and pooled toward refunds. The platform tops up the rest from its insurance fund (funded by 5% non-refundable fee on all picks).</p>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════ ONBOARDING MODAL (Become a Seller) ═══════════════ -->
+<div id="modal-onboarding" class="hidden fixed inset-0 z-50 modal-bg flex items-center justify-center p-4 overflow-y-auto">
+  <div class="card rounded-lg p-6 max-w-2xl w-full my-8">
+    <!-- Step indicator -->
+    <div class="flex items-center justify-between mb-6">
+      <h2 class="text-xl font-bold">Become a seller</h2>
+      <button onclick="closeOnboarding()" class="text-muted hover:text-white text-xl">×</button>
+    </div>
+    <div class="flex items-center gap-2 mb-6">
+      <div id="onb-dot-1" class="flex-1 h-1 rounded-full bg-accent"></div>
+      <div id="onb-dot-2" class="flex-1 h-1 rounded-full bg-border"></div>
+      <div id="onb-dot-3" class="flex-1 h-1 rounded-full bg-border"></div>
+      <div id="onb-dot-4" class="flex-1 h-1 rounded-full bg-border"></div>
+    </div>
+
+    <!-- Step 1: Identity -->
+    <div id="onb-step-1">
+      <div class="text-xs text-accent font-semibold mb-1">STEP 1 OF 4</div>
+      <h3 class="text-2xl font-bold mb-2">Verify your identity</h3>
+      <p class="text-muted text-sm mb-5">Sellers are real people, not anonymous Twitter accounts. We verify everyone with government ID — same as a sportsbook.</p>
+      <div class="space-y-3">
+        <div><label class="text-xs text-muted">Legal name</label><input class="w-full px-3 py-2 rounded-md mt-1" value="Andrew Xue"/></div>
+        <div class="grid grid-cols-2 gap-3">
+          <div><label class="text-xs text-muted">DOB</label><input class="w-full px-3 py-2 rounded-md mt-1" placeholder="MM/DD/YYYY"/></div>
+          <div><label class="text-xs text-muted">SSN (last 4)</label><input class="w-full px-3 py-2 rounded-md mt-1" placeholder="••••"/></div>
+        </div>
+        <div class="border-2 border-dashed border-border rounded-md p-6 text-center hover:border-accent cursor-pointer">
+          <div class="text-2xl mb-2">📷</div>
+          <div class="text-sm font-medium">Upload government ID</div>
+          <div class="text-xs text-muted mt-1">Driver's license or passport · Powered by Persona</div>
+        </div>
+      </div>
+      <div class="text-xs text-muted mt-4">🔒 ID is verified by a 3rd party (Persona) and never stored on our servers.</div>
+      <button onclick="onbNext(2)" class="btn-primary w-full py-3 rounded-md mt-5">Continue →</button>
+    </div>
+
+    <!-- Step 2: Bank link -->
+    <div id="onb-step-2" class="hidden">
+      <div class="text-xs text-accent font-semibold mb-1">STEP 2 OF 4</div>
+      <h3 class="text-2xl font-bold mb-2">Connect your bank</h3>
+      <p class="text-muted text-sm mb-5">For payouts when picks win, and for funding your stake. Plaid handles the connection — we never see your credentials.</p>
+      <div class="space-y-3">
+        <button class="card rounded-md p-4 w-full flex items-center gap-3 hover:border-accent text-left">
+          <div class="w-10 h-10 rounded bg-blue-500/20 flex items-center justify-center">🏦</div>
+          <div><div class="font-medium">Connect with Plaid</div><div class="text-xs text-muted">Chase, BoA, Wells Fargo, 12,000+ banks</div></div>
+        </button>
+        <button class="card rounded-md p-4 w-full flex items-center gap-3 hover:border-accent text-left">
+          <div class="w-10 h-10 rounded bg-purple-500/20 flex items-center justify-center">💳</div>
+          <div><div class="font-medium">Add debit card</div><div class="text-xs text-muted">Instant payouts (1.5% fee)</div></div>
+        </button>
+      </div>
+      <div class="bg-panel2 rounded-md p-3 text-xs text-muted mt-4">Stripe Connect handles payments. We're a marketplace, not a money services business.</div>
+      <div class="flex gap-2 mt-5">
+        <button onclick="onbNext(1)" class="btn-ghost px-4 py-3 rounded-md">← Back</button>
+        <button onclick="onbNext(3)" class="btn-primary py-3 rounded-md flex-1">Continue →</button>
+      </div>
+    </div>
+
+    <!-- Step 3: Initial stake -->
+    <div id="onb-step-3" class="hidden">
+      <div class="text-xs text-accent font-semibold mb-1">STEP 3 OF 4</div>
+      <h3 class="text-2xl font-bold mb-2">Fund your stake balance</h3>
+      <p class="text-muted text-sm mb-5">This is the money you put behind your picks. Every pick you sell requires a stake. Lose? You refund buyers from this balance.</p>
+      <div class="grid grid-cols-3 gap-2 mb-4">
+        <button class="card rounded-md p-4 hover:border-accent text-center"><div class="stat-num text-lg">$100</div><div class="text-xs text-muted">Starter</div></button>
+        <button class="card rounded-md p-4 hover:border-accent text-center border-accent glow"><div class="stat-num text-lg">$500</div><div class="text-xs text-accent">Recommended</div></button>
+        <button class="card rounded-md p-4 hover:border-accent text-center"><div class="stat-num text-lg">$2,000</div><div class="text-xs text-muted">Pro</div></button>
+      </div>
+      <div><label class="text-xs text-muted">Custom amount</label><input class="w-full px-3 py-2 rounded-md mt-1" value="$500"/></div>
+      <div class="bg-accent/5 border border-accent/30 rounded-md p-4 mt-4 text-sm space-y-2">
+        <div class="font-semibold text-accent">What this gets you</div>
+        <ul class="space-y-1 text-zinc-300 text-xs">
+          <li>✓ Sell up to ~16 picks at $30 stake each before topping up</li>
+          <li>✓ Withdraw your stake anytime (no active picks)</li>
+          <li>✓ Earn 4% APY on idle stake balance</li>
+        </ul>
+      </div>
+      <div class="flex gap-2 mt-5">
+        <button onclick="onbNext(2)" class="btn-ghost px-4 py-3 rounded-md">← Back</button>
+        <button onclick="onbNext(4)" class="btn-primary py-3 rounded-md flex-1">Deposit $500 →</button>
+      </div>
+    </div>
+
+    <!-- Step 4: Probation -->
+    <div id="onb-step-4" class="hidden">
+      <div class="text-xs text-accent font-semibold mb-1">STEP 4 OF 4</div>
+      <h3 class="text-2xl font-bold mb-2">Build (or import) your record</h3>
+      <p class="text-muted text-sm mb-5">Before you can sell, you need <strong class="text-white">30 tracked picks</strong>. Already have a verified record elsewhere? Import it.</p>
+
+      <!-- Import option -->
+      <div class="card rounded-md p-4 mb-4 border-accent/30 bg-accent/5">
+        <div class="flex items-center justify-between mb-2">
+          <div>
+            <div class="font-semibold text-sm flex items-center gap-2">⚡ Import from Pikkit <span class="pill bg-accent/20 text-accent">FASTEST</span></div>
+            <div class="text-xs text-muted mt-1">Read-only sportsbook sync. We pull your last 90 days of bets and verify on-chain.</div>
+          </div>
+          <button class="btn-primary px-3 py-1.5 rounded-md text-xs">Connect Pikkit</button>
+        </div>
+        <div class="text-xs text-zinc-400 mt-2">Also supported: Betstamp, Action Network bet-sync, manual CSV upload</div>
+      </div>
+
+      <div class="text-xs text-muted text-center mb-3">— or build from scratch —</div>
+
+      <div class="card rounded-md p-4 mb-4 bg-panel2">
+        <div class="flex items-center justify-between mb-2">
+          <span class="text-sm font-medium">Your progress</span>
+          <span class="stat-num text-accent">0 / 30</span>
+        </div>
+        <div class="h-2 bg-bg rounded-full overflow-hidden">
+          <div class="h-full bg-accent" style="width: 0%"></div>
+        </div>
+        <p class="text-xs text-muted mt-2">Log picks before each game starts. Tracked publicly, can't be deleted.</p>
+      </div>
+      <div class="space-y-2 text-sm">
+        <div class="flex items-start gap-2"><span class="text-accent">•</span><span class="text-zinc-300">Picks are time-locked — you can't backdate</span></div>
+        <div class="flex items-start gap-2"><span class="text-accent">•</span><span class="text-zinc-300">After 30, your hit rate, ROI, and units are public</span></div>
+        <div class="flex items-start gap-2"><span class="text-accent">•</span><span class="text-zinc-300">Need 50%+ hit rate or +5% ROI on probation to unlock selling</span></div>
+        <div class="flex items-start gap-2"><span class="text-accent">•</span><span class="text-zinc-300">Verified badge appears after 6 months + 200 picks</span></div>
+      </div>
+      <button onclick="finishOnboarding()" class="btn-primary w-full py-3 rounded-md mt-6">Start logging picks</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════ BUY MODAL ═══════════════ -->
+<div id="modal-buy" class="hidden fixed inset-0 z-50 modal-bg flex items-center justify-center p-4">
+  <div class="card rounded-lg max-w-md w-full overflow-hidden relative" style="border-color: rgba(34,197,94,0.25)">
+    <div class="holo-border" style="opacity:0.5"></div>
+    <div id="buy-step-1" class="p-6 relative">
+      <div class="flex items-center justify-between mb-1">
+        <div class="flex items-center gap-2">
+          <span class="accent-bar"></span>
+          <h2 class="text-xl font-bold">Confirm unlock</h2>
+        </div>
+        <button onclick="closeBuyModal()" class="text-muted hover:text-white"><i data-lucide="x" class="icon-md"></i></button>
+      </div>
+      <p class="text-xs text-muted mb-5 ml-4">Held in escrow until the game settles.</p>
+
+      <!-- Locked preview chip -->
+      <div class="relative gradient-mlb lock-grid rounded-lg p-4 mb-5 overflow-hidden">
+        <div class="data-stream"><span style="--x:15%;--d:2.4s;--del:0s"></span><span style="--x:35%;--d:3s;--del:0.4s"></span><span style="--x:60%;--d:2.7s;--del:0.8s"></span><span style="--x:85%;--d:3.2s;--del:0.2s"></span></div>
+        <div class="flex items-center gap-3 relative z-10">
+          <div class="lock-cube"><i data-lucide="lock" class="icon-lg"></i></div>
+          <div class="flex-1">
+            <div class="text-[10px] uppercase tracking-[0.2em] text-white/55 font-semibold mb-1">MLB · Hitter Prop</div>
+            <div class="decrypt-text" data-decrypt id="modal-decrypt"><span>X</span><span>X</span><span>X</span><span>X</span><span>X</span><span>X</span><span>X</span><span>X</span><span>X</span><span>X</span><span>X</span><span>X</span><span>X</span><span>X</span></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="space-y-2.5 text-sm mb-5">
+        <div class="flex justify-between"><span class="text-muted flex items-center gap-1.5"><i data-lucide="user" class="icon-sm"></i>Seller</span><span class="flex items-center gap-1">@firstpitch<i data-lucide="check-circle-2" class="icon-sm text-accent"></i></span></div>
+        <div class="flex justify-between"><span class="text-muted flex items-center gap-1.5"><i data-lucide="signal" class="icon-sm"></i>Odds range</span><span class="font-mono">+105 / +130</span></div>
+        <div class="flex justify-between"><span class="text-muted flex items-center gap-1.5"><i data-lucide="coins" class="icon-sm"></i>Seller stake</span><span class="text-accent font-mono">$120</span></div>
+        <div class="flex justify-between"><span class="text-muted flex items-center gap-1.5"><i data-lucide="dollar-sign" class="icon-sm"></i>Price</span><span class="stat-num">$5.00</span></div>
+        <div class="flex justify-between text-accent"><span class="flex items-center gap-1.5"><i data-lucide="rotate-ccw" class="icon-sm"></i>Refund if loses</span><span class="stat-num">$4.75 (95%)</span></div>
+        <hr class="border-border my-2"/>
+        <div class="flex justify-between font-semibold text-base"><span>Charge now</span><span class="stat-num text-gradient">$5.00</span></div>
+      </div>
+
+      <div class="bg-panel2 border border-border rounded-md p-3 text-[11px] text-muted mb-5 flex items-start gap-2">
+        <i data-lucide="info" class="icon-sm text-accent mt-0.5"></i>
+        <span>Held in escrow until game settles. Auto-refund processed within 1h of game end if pick loses. Powered by official box scores.</span>
+      </div>
+      <div class="flex gap-2">
+        <button onclick="closeBuyModal()" class="btn-ghost px-4 py-3 rounded-md flex-1">Cancel</button>
+        <button onclick="simulateBuy()" class="btn-primary unlock-btn px-4 py-3 rounded-md flex-1 flex items-center justify-center gap-1.5"><i data-lucide="unlock" class="icon-sm"></i>Unlock for $5</button>
+      </div>
+    </div>
+
+    <div id="buy-step-2" class="hidden p-6 relative">
+      <!-- Cinematic unlock sequence -->
+      <div class="relative h-44 rounded-lg gradient-mlb lock-grid scan-line overflow-hidden mb-5 flex items-center justify-center" id="unlock-stage">
+        <div class="data-stream" id="unlock-stream"></div>
+        <div class="corner-bracket tl"></div><div class="corner-bracket tr"></div>
+        <div class="corner-bracket bl"></div><div class="corner-bracket br"></div>
+        <div class="lock-cube z-10 transition-all duration-500" id="unlock-cube" style="width:64px;height:64px;border-radius:14px"><i data-lucide="lock" class="icon-xl"></i></div>
+        <div id="unlock-progress" class="absolute bottom-0 left-0 h-0.5 bg-accent transition-all duration-300" style="width:0%;box-shadow:0 0 12px var(--accent)"></div>
+      </div>
+
+      <div class="text-center mb-4">
+        <div class="text-[10px] uppercase tracking-[0.2em] text-accent font-semibold mb-1" id="unlock-status">Verifying payment…</div>
+        <h2 class="text-2xl font-bold mb-1 text-gradient" id="unlock-title">Decrypting pick</h2>
+      </div>
+
+      <div id="unlock-reveal" class="hidden">
+        <div class="bg-panel2 rounded-lg p-4 border border-accent/30 mb-4 space-y-3">
+          <div class="flex items-center justify-between">
+            <div class="text-[10px] uppercase tracking-wider text-accent">The pick</div>
+            <span class="signal-badge signal-hot"><i data-lucide="flame" class="icon-sm"></i>Hot</span>
+          </div>
+          <div class="text-lg font-bold leading-snug">Aaron Judge <span class="text-accent">over 1.5</span> total bases</div>
+          <div class="grid grid-cols-3 gap-2 pt-2 border-t border-border">
+            <div><div class="text-[9px] text-muted uppercase">Best book</div><div class="text-xs font-semibold mt-0.5">DraftKings</div></div>
+            <div><div class="text-[9px] text-muted uppercase">Odds</div><div class="text-xs font-mono mt-0.5">+115</div></div>
+            <div><div class="text-[9px] text-muted uppercase">Stake</div><div class="text-xs font-mono mt-0.5 text-accent">3u</div></div>
+          </div>
+        </div>
+        <div class="bg-panel2 rounded-md p-3 mb-4 border border-border">
+          <div class="text-[10px] uppercase tracking-wider text-muted mb-1.5 flex items-center gap-1.5"><i data-lucide="brain" class="icon-sm text-accent"></i>Reasoning</div>
+          <p class="text-xs text-zinc-300 leading-relaxed">Judge has hit the over in 7 of his last 10 vs RHP with exit velo &gt;105. Whitlock has a 1.62 HR/9 vs righties this season. Park factor favors righty pull power, wind 8mph out to RF. Model projects 2.3 TB vs market line 1.5.</p>
+        </div>
+        <button onclick="simulateGameResult()" class="btn-primary w-full py-3 rounded-md flex items-center justify-center gap-2"><i data-lucide="play" class="icon-sm"></i>Simulate game result</button>
+      </div>
+    </div>
+
+    <div id="buy-step-3" class="hidden p-6 text-center relative">
+      <div id="result-icon" class="w-20 h-20 mx-auto rounded-2xl flex items-center justify-center mb-5"></div>
+      <h2 id="result-title" class="text-2xl font-bold mb-3"></h2>
+      <div id="result-body" class="text-sm text-zinc-300 mb-6 text-left bg-panel2 rounded-md p-4 border border-border"></div>
+      <div class="flex gap-2">
+        <button onclick="closeBuyModal()" class="btn-ghost px-4 py-3 rounded-md flex-1">Close</button>
+        <button onclick="closeBuyModal(); showView('marketplace')" class="btn-primary px-4 py-3 rounded-md flex-1">Browse more picks</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════ POST PICK MODAL ═══════════════ -->
+<div id="modal-post" class="hidden fixed inset-0 z-50 modal-bg flex items-center justify-center p-4">
+  <div class="card rounded-lg p-6 max-w-lg w-full">
+    <h2 class="text-xl font-bold mb-1">Post a new pick</h2>
+    <p class="text-muted text-sm mb-5">Stake your own money — your reputation depends on it.</p>
+    <div class="space-y-3">
+      <div>
+        <label class="text-xs text-muted">Sport / Game</label>
+        <select class="w-full px-3 py-2 rounded-md mt-1"><option>MLB · NYY vs BOS · 7:05 PM ET</option></select>
+      </div>
+      <div>
+        <label class="text-xs text-muted">Pick description</label>
+        <input class="w-full px-3 py-2 rounded-md mt-1" placeholder="e.g. Aaron Judge over 1.5 total bases" value="Aaron Judge O1.5 TB"/>
+      </div>
+      <div class="grid grid-cols-2 gap-3">
+        <div>
+          <label class="text-xs text-muted">Price ($)</label>
+          <input class="w-full px-3 py-2 rounded-md mt-1" value="12"/>
+        </div>
+        <div>
+          <label class="text-xs text-muted">Your stake ($)</label>
+          <input class="w-full px-3 py-2 rounded-md mt-1" value="30"/>
+        </div>
+      </div>
+      <div>
+        <label class="text-xs text-muted">Listing tier</label>
+        <div class="grid grid-cols-2 gap-2 mt-1">
+          <div class="card rounded-md p-3 cursor-pointer hover:border-accent border-accent">
+            <div class="flex items-center gap-1 mb-1"><span class="text-accent">🛡️</span><span class="text-sm font-semibold">Insured</span></div>
+            <div class="text-xs text-muted">Stake required. Buyers get 95% refund on loss. Higher trust → higher price.</div>
+          </div>
+          <div class="card rounded-md p-3 cursor-pointer hover:border-accent">
+            <div class="flex items-center gap-1 mb-1"><span class="text-zinc-400">○</span><span class="text-sm font-semibold">Verified-only</span></div>
+            <div class="text-xs text-muted">No stake, no refund. Just your tracked record. Cheaper, lower trust.</div>
+          </div>
+        </div>
+      </div>
+      <div>
+        <label class="text-xs text-muted">Reasoning (unlocks for buyers)</label>
+        <textarea class="w-full px-3 py-2 rounded-md mt-1 h-24" placeholder="Why this hits..."></textarea>
+      </div>
+    </div>
+    <div class="bg-accent/5 border border-accent/30 rounded-md p-3 text-xs text-zinc-300 mt-4">
+      💰 You're staking <strong>$30</strong>. If the pick loses, $30 is slashed and used to refund buyers. Your stake balance: $2,400 → $2,370 if posted.
+    </div>
+    <div class="flex gap-2 mt-5">
+      <button onclick="closePostModal()" class="btn-ghost px-4 py-2.5 rounded-md flex-1">Cancel</button>
+      <button onclick="closePostModal()" class="btn-primary px-4 py-2.5 rounded-md flex-1">Post pick</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════ DATA + JS ═══════════════ -->
+<script>
+// streak: array of W/L/P (push) for last 10 picks (newest last)
+const PICKS = [
+  { id:1, sportKey:'mlb', sport:'MLB', tag:'Hitter Prop', game:'NYY vs BOS', time:'7:05 PM ET', lockMins:42, price:5, tier:'insured', seller:'@firstpitch', verified:true, hit:'58.1%', roi:'+8.2%', confidence:3, buyers:38, viewers:14, stake:120, oddsRange:'+105 / +130', signals:['hot','sharp'], streak:['W','W','L','W','W','W','L','W','W','W'] },
+  { id:2, sportKey:'nba', sport:'NBA', tag:'Player Prop', game:'BOS vs PHI', time:'7:30 PM ET', lockMins:67, price:6, tier:'verified', seller:'@hoopsedge', verified:true, hit:'56.1%', roi:'+5.4%', confidence:2, buyers:24, viewers:8, stake:80, oddsRange:'-115 / -105', signals:['sharp'], streak:['L','W','W','W','L','W','W','L','W','W'] },
+  { id:3, sportKey:'mlb', sport:'MLB', tag:'Pitcher Prop', game:'NYY vs BOS', time:'7:05 PM ET', lockMins:42, price:4, tier:'insured', seller:'@strikezone', verified:true, hit:'60.2%', roi:'+11.1%', confidence:3, buyers:52, viewers:23, stake:200, oddsRange:'-120 / -110', signals:['hot','pocket'], streak:['W','W','W','L','W','W','W','W','L','W'] },
+  { id:4, sportKey:'nfl', sport:'NFL', tag:'Game Line', game:'BAL vs CIN', time:'Sun 1:00 PM', lockMins:189, price:8, tier:'verified', seller:'@gridironguru', verified:false, hit:'53.0%', roi:'+3.8%', confidence:2, buyers:18, viewers:5, stake:60, oddsRange:'-110 / +100', signals:['fresh'], streak:['W','L','W','L','W','W','L','W','L','W'] },
+  { id:5, sportKey:'mlb', sport:'MLB', tag:'3-Leg Parlay', game:'NYY vs BOS', time:'7:05 PM ET', lockMins:42, price:7, tier:'insured', seller:'@firstpitch', verified:true, hit:'58.1%', roi:'+8.2%', confidence:1, buyers:14, viewers:11, stake:90, oddsRange:'+450 / +600', signals:['fade'], streak:['W','W','L','W','W','W','L','W','W','W'] },
+  { id:6, sportKey:'nhl', sport:'NHL', tag:'Skater Prop', game:'EDM vs CGY', time:'9:00 PM ET', lockMins:152, price:3, tier:'insured', seller:'@icecold', verified:true, hit:'54.4%', roi:'+4.7%', confidence:2, buyers:22, viewers:7, stake:75, oddsRange:'+110 / +135', signals:['fresh'], streak:['L','W','W','L','W','W','W','L','W','W'] },
+  { id:7, sportKey:'mlb', sport:'MLB', tag:'Hitter Prop', game:'NYY vs BOS', time:'7:05 PM ET', lockMins:42, price:5, tier:'insured', seller:'@bombsquad', verified:false, hit:'55.7%', roi:'+6.9%', confidence:2, buyers:9, viewers:4, stake:50, oddsRange:'+140 / +170', signals:['pocket'], streak:['W','L','W','W','L','W','W','L','W','W'] },
+  { id:8, sportKey:'nba', sport:'NBA', tag:'Game Line', game:'BOS vs PHI', time:'7:30 PM ET', lockMins:67, price:4, tier:'verified', seller:'@theliner', verified:false, hit:'52.3%', roi:'+2.1%', confidence:1, buyers:6, viewers:3, stake:40, oddsRange:'-108 / +102', signals:[], streak:['L','W','L','W','W','L','W','L','W','W'] },
+];
+
+const SIGNAL_META = {
+  hot:    { icon:'flame',        label:'Hot',     cls:'signal-hot' },
+  sharp:  { icon:'trending-up',  label:'Sharp',   cls:'signal-sharp' },
+  fresh:  { icon:'zap',          label:'Fresh',   cls:'signal-fresh' },
+  pocket: { icon:'target',       label:'Pocket',  cls:'signal-pocket' },
+  fade:   { icon:'shield-alert', label:'Contrarian', cls:'signal-fade' },
+};
+
+// Custom inline SVG sport logos — crisper than lucide for sport branding
+const SPORT_LOGO = {
+  mlb:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="12" r="9"/><path d="M5.5 7c2 1.2 3 3 3 5s-1 3.8-3 5M18.5 7c-2 1.2-3 3-3 5s1 3.8 3 5" stroke-dasharray="2 2"/></svg>`,
+  nba:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3v18M5.6 5.6c3.5 3.5 9.3 3.5 12.8 0M5.6 18.4c3.5-3.5 9.3-3.5 12.8 0"/></svg>`,
+  nfl:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><ellipse cx="12" cy="12" rx="9" ry="5.5" transform="rotate(-25 12 12)"/><path d="M9 11h6M10 9.5h4M10 12.5h4M10 14h4"/></svg>`,
+  nhl:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><ellipse cx="12" cy="14" rx="8" ry="3"/><path d="M4 14v-2c0-1.5 3.5-3 8-3s8 1.5 8 3v2"/></svg>`,
+  soccer:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="12" r="9"/><path d="M12 4l3 3-1 4-4 1-3-3 1-4 4-1zM12 4v3M19 9l-3 1M5 9l3 1M16 18l-2-3M8 18l2-3"/></svg>`,
+};
+const SPORT_ICON = { mlb:'baseball', nba:'volleyball', nfl:'shield', nhl:'snowflake', soccer:'circle-dot' };
+
+const SELLERS = [
+  { handle:'@firstpitch', sport:'MLB hitter props', roi:'+8.2%', hit:'58.1%', picks:39, verified:true, sub:29, badge:'Pikkit-verified' },
+  { handle:'@strikezone', sport:'Pitcher Ks', roi:'+11.1%', hit:'60.2%', picks:31, verified:true, sub:39, badge:'Pikkit-verified' },
+  { handle:'@hoopsedge', sport:'NBA props', roi:'+5.4%', hit:'56.1%', picks:62, verified:true, sub:25, badge:'On-platform 6mo' },
+  { handle:'@icecold', sport:'NHL specialist', roi:'+4.7%', hit:'54.4%', picks:28, verified:true, sub:19, badge:'On-platform 4mo' },
+];
+
+const LEADERBOARD = [
+  { rank:1, handle:'@strikezone', sport:'MLB', picks:31, hit:'60.2%', roi:'+11.1%', units:'+9.4', price:'$4', verified:true },
+  { rank:2, handle:'@firstpitch', sport:'MLB', picks:39, hit:'58.1%', roi:'+8.2%', units:'+7.4', price:'$5', verified:true },
+  { rank:3, handle:'@bombsquad', sport:'MLB', picks:24, hit:'55.7%', roi:'+6.9%', units:'+4.2', price:'$5', verified:false },
+  { rank:4, handle:'@hoopsedge', sport:'NBA', picks:62, hit:'56.1%', roi:'+5.4%', units:'+5.2', price:'$6', verified:true },
+  { rank:5, handle:'@icecold', sport:'NHL', picks:28, hit:'54.4%', roi:'+4.7%', units:'+3.3', price:'$3', verified:true },
+  { rank:6, handle:'@gridironguru', sport:'NFL', picks:18, hit:'53.0%', roi:'+3.8%', units:'+1.9', price:'$8', verified:false },
+  { rank:7, handle:'@theliner', sport:'NBA', picks:14, hit:'52.3%', roi:'+2.1%', units:'+0.8', price:'$4', verified:false },
+  { rank:8, handle:'@futuresbiz', sport:'Multi', picks:12, hit:'51.1%', roi:'+1.4%', units:'+0.3', price:'$7', verified:true },
+];
+
+// Bookmarks: pick IDs the user is tracking
+const BOOKMARKS = new Set([1, 3, 6]);
+// Following: seller handles
+const FOLLOWING = new Set(['@firstpitch', '@strikezone']);
+const SELLER_META = {
+  '@firstpitch':  { name:'First Pitch', avatar:'F', sport:'MLB hitter props', hit:'58.1%', roi:'+8.2%', units:'+7.4u', picks:39, followers:1284, verified:true, badge:'Pikkit-verified' },
+  '@strikezone':  { name:'Strike Zone', avatar:'S', sport:'Pitcher Ks',       hit:'60.2%', roi:'+11.1%',units:'+9.4u', picks:31, followers:2104, verified:true, badge:'Pikkit-verified' },
+  '@hoopsedge':   { name:'Hoops Edge',  avatar:'H', sport:'NBA props',        hit:'56.1%', roi:'+5.4%', units:'+5.2u', picks:62, followers:842,  verified:true, badge:'On-platform 6mo' },
+  '@gridironguru':{ name:'Gridiron',    avatar:'G', sport:'NFL game lines',   hit:'53.0%', roi:'+3.8%', units:'+1.9u', picks:18, followers:312,  verified:false, badge:'New seller' },
+  '@icecold':     { name:'Ice Cold',    avatar:'I', sport:'NHL specialist',   hit:'54.4%', roi:'+4.7%', units:'+3.3u', picks:28, followers:476,  verified:true, badge:'On-platform 4mo' },
+  '@bombsquad':   { name:'Bomb Squad',  avatar:'B', sport:'MLB power hitters',hit:'55.7%', roi:'+6.9%', units:'+4.2u', picks:24, followers:603,  verified:false, badge:'Unverified' },
+  '@theliner':    { name:'The Liner',   avatar:'T', sport:'NBA game lines',   hit:'52.3%', roi:'+2.1%', units:'+0.8u', picks:14, followers:188,  verified:false, badge:'New seller' },
+};
+let MARKET_FILTER = 'all'; // 'all' | 'following'
+let currentMyPicksFilter = 'all';
+
+// My Picks data — bought picks with mixed outcomes
+const MY_PICKS = [
+  { pick:'Aaron Judge', line:'O 1.5 TB',   sportKey:'mlb', sport:'MLB', seller:'@diamondking', verified:true, game:'NYY vs BOS', time:'2h 14m', paid:12, status:'pending', book:'DraftKings', odds:'+115' },
+  { pick:'Jayson Tatum',line:'O 28.5 PTS', sportKey:'nba', sport:'NBA', seller:'@hoopsedge',   verified:true, game:'BOS vs PHI', time:'7:30 PM', paid:15, status:'pending', book:'FanDuel',     odds:'-110' },
+  { pick:'Gerrit Cole', line:'O 7.5 K',    sportKey:'mlb', sport:'MLB', seller:'@strikezone',  verified:true, game:'NYY vs BOS', time:'2h 14m', paid:10, status:'pending', book:'DraftKings', odds:'-118' },
+  { pick:'Shohei Ohtani',line:'O 1.5 TB',  sportKey:'mlb', sport:'MLB', seller:'@diamondking', verified:true, game:'LAD vs SF',  time:'Yesterday', paid:12, status:'won',  result:'3 TB',  payout:'+$11.40', odds:'+105' },
+  { pick:'Ronald Acuña',line:'1+ SB',      sportKey:'mlb', sport:'MLB', seller:'@diamondking', verified:true, game:'ATL vs MIA', time:'Yesterday', paid:10, status:'refunded', result:'0 SB', refund:'$9.50', odds:'+140' },
+  { pick:'Connor McDavid',line:'O 0.5 G',  sportKey:'nhl', sport:'NHL', seller:'@icecold',     verified:true, game:'EDM vs CGY', time:'2 days ago', paid:8, status:'void', result:'scratched', refund:'$8.00', odds:'+125' },
+];
+
+const STATUS_META = {
+  pending: { label:'PENDING', cls:'rc-pending', icon:'timer',         glow:'rgba(59,130,246,0.5)' },
+  won:     { label:'HIT',     cls:'rc-won',     icon:'check-circle-2',glow:'rgba(34,197,94,0.7)'  },
+  lost:    { label:'MISS',    cls:'rc-lost',    icon:'x-circle',      glow:'rgba(239,68,68,0.6)'  },
+  refunded:{ label:'REFUNDED',cls:'rc-won',     icon:'rotate-ccw',    glow:'rgba(34,197,94,0.5)'  },
+  void:    { label:'VOID',    cls:'rc-void',    icon:'shield-off',    glow:'rgba(161,161,170,0.5)' },
+};
+
+function resultCard(p) {
+  const meta = STATUS_META[p.status] || STATUS_META.pending;
+  const logo = SPORT_LOGO[p.sportKey] || '';
+  const isPending = p.status === 'pending';
+  const isWon = p.status === 'won';
+  const isLost = p.status === 'lost';
+  const isRefund = p.status === 'refunded' || p.status === 'void';
+
+  // Big bottom number
+  let bigNum = '', bigLbl = '', bigCls = '';
+  if (isPending)      { bigNum = `$${p.paid}`; bigLbl = 'Paid · awaiting result'; bigCls = 'text-white'; }
+  else if (isWon)     { bigNum = p.payout || `+$${p.paid}`; bigLbl = `Result: ${p.result || 'WON'}`; bigCls = 'text-accent'; }
+  else if (isLost)    { bigNum = `-$${p.paid}`; bigLbl = `Result: ${p.result || 'MISS'}`; bigCls = 'text-danger'; }
+  else if (isRefund)  { bigNum = p.refund || `$${p.paid}`; bigLbl = `Auto-refunded · ${p.result || ''}`.trim(); bigCls = 'text-accent'; }
+
+  // Mini progress bar (animated for pending, full for settled)
+  const progressFill = isPending ? '<div class="rc-progress-fill rc-progress-live"></div>' :
+                       (isWon || isRefund) ? '<div class="rc-progress-fill rc-progress-win"></div>' :
+                       '<div class="rc-progress-fill rc-progress-lose"></div>';
+
+  // Right action / detail
+  const action = isPending
+    ? `<button onclick="showView('grading')" class="btn-primary px-3 py-1.5 rounded-md text-xs flex items-center gap-1"><i data-lucide="activity" class="icon-sm"></i>Track live</button>`
+    : isWon ? `<span class="rc-badge rc-won"><i data-lucide="check-circle-2" class="icon-sm"></i>HIT</span>`
+    : isLost ? `<span class="rc-badge rc-lost"><i data-lucide="x-circle" class="icon-sm"></i>MISS</span>`
+    : `<span class="rc-badge rc-won"><i data-lucide="rotate-ccw" class="icon-sm"></i>REFUNDED</span>`;
+
+  return `
+    <div class="result-card ${meta.cls}">
+      <div class="rc-banner gradient-${p.sportKey} relative">
+        <div class="rc-scan"></div>
+        <div class="rc-corner tl"></div><div class="rc-corner tr"></div>
+        <div class="absolute top-3 left-3 flex items-center gap-1.5 z-10">
+          <div class="sport-disc text-white">${logo}</div>
+          <span class="pill bg-black/50 text-white border border-white/10 backdrop-blur">${p.sport}</span>
+        </div>
+        <div class="absolute top-3 right-3 z-10">
+          <span class="rc-status-pill ${meta.cls}"><i data-lucide="${meta.icon}" class="icon-sm"></i>${meta.label}</span>
+        </div>
+        <div class="rc-pick-name">
+          <div class="text-[10px] uppercase tracking-[0.18em] text-white/55 font-semibold mb-1">${p.book || 'Pick'} · ${p.odds || ''}</div>
+          <div class="font-bold text-lg leading-tight text-white">${p.pick}</div>
+          <div class="font-mono text-sm text-white/85">${p.line}</div>
+        </div>
+      </div>
+      <div class="p-4">
+        <div class="flex items-center justify-between mb-3 text-xs">
+          <div class="flex items-center gap-1.5 text-zinc-300">
+            <i data-lucide="swords" class="icon-sm text-zinc-500"></i>${p.game}
+          </div>
+          <span class="text-muted text-[10px]">${p.time}</span>
+        </div>
+        <div class="seller-chip rounded-full inline-flex items-center gap-2 pl-1 pr-3 py-1 mb-3">
+          <div class="w-6 h-6 rounded-full bg-gradient-to-br from-accent to-blue-500"></div>
+          <span class="text-xs font-semibold">${p.seller}</span>
+          ${p.verified ? '<i data-lucide="check-circle-2" class="icon-sm text-accent"></i>' : ''}
+        </div>
+        <div class="rc-progress mb-3">${progressFill}</div>
+        <div class="flex items-end justify-between">
+          <div>
+            <div class="stat-num text-2xl ${bigCls}">${bigNum}</div>
+            <div class="text-[10px] text-muted mt-0.5">${bigLbl}</div>
+          </div>
+          ${action}
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+function settledBookmarkCard(s) {
+  const sportKey = (s.pick.toLowerCase().includes('judge')||s.pick.toLowerCase().includes('cole')||s.pick.toLowerCase().includes('acuña')) ? 'mlb'
+    : s.pick.toLowerCase().includes('tatum') ? 'nba'
+    : s.pick.toLowerCase().includes('mcdavid') ? 'nhl' : 'mlb';
+  const sport = sportKey.toUpperCase();
+  const won = s.outcome === 'won';
+  const parts = s.pick.split(' ');
+  const name = parts[0] + (parts[1]&&parts[1].length>2&&!/^O\d/.test(parts[1])?' '+parts[1]:'');
+  const line = s.pick.replace(name,'').trim() || s.pick;
+  return resultCard({
+    pick: name,
+    line: line,
+    sportKey, sport,
+    seller: s.seller, verified: s.verified,
+    game: s.game.split(' · ')[0],
+    time: s.game.split(' · ')[1] || '',
+    paid: s.price,
+    status: won ? 'won' : 'lost',
+    result: s.detail,
+    payout: s.pl,
+    odds: '—',
+    book: 'Hypothetical'
+  });
+}
+
+function renderMyPicks(filter) {
+  const grid = document.getElementById('mypicks-grid');
+  if (!grid) return;
+  let list = MY_PICKS;
+  if (filter === 'pending') list = MY_PICKS.filter(p => p.status === 'pending');
+  else if (filter === 'won') list = MY_PICKS.filter(p => p.status === 'won');
+  else if (filter === 'lost') list = MY_PICKS.filter(p => p.status === 'lost' || p.status === 'refunded' || p.status === 'void');
+  grid.innerHTML = list.map(resultCard).join('');
+  if (window.lucide) lucide.createIcons();
+}
+
+function sellerPopover(p) {
+  const m = SELLER_META[p.seller] || { name:p.seller.replace('@',''), avatar:p.seller[1].toUpperCase(), sport:p.sport, hit:p.hit, roi:p.roi, units:'—', picks:'—', followers:'—', verified:p.verified, badge:p.verified?'Verified':'Unverified' };
+  return `
+    <div class="seller-popover" data-popover="${p.seller}">
+      <div class="seller-popover-header">
+        <div class="w-12 h-12 rounded-full bg-gradient-to-br from-accent to-blue-500 flex items-center justify-center text-lg font-bold text-bg">${m.avatar}</div>
+        <div class="flex-1 min-w-0">
+          <div class="flex items-center gap-1.5">
+            <span class="font-semibold text-sm">${p.seller}</span>
+            ${m.verified ? '<i data-lucide="check-circle-2" class="icon-sm text-accent"></i>' : ''}
+          </div>
+          <div class="text-[10px] text-muted">${m.sport}</div>
+          <div class="text-[10px] text-accent mt-0.5">${m.badge}</div>
+        </div>
+      </div>
+      <div class="grid grid-cols-4 gap-2 my-3 text-center">
+        <div><div class="stat-num text-accent text-sm">${m.roi}</div><div class="text-[9px] text-muted uppercase">ROI</div></div>
+        <div><div class="stat-num text-sm">${m.hit}</div><div class="text-[9px] text-muted uppercase">Hit</div></div>
+        <div><div class="stat-num text-sm">${m.units}</div><div class="text-[9px] text-muted uppercase">Units</div></div>
+        <div><div class="stat-num text-sm">${m.picks}</div><div class="text-[9px] text-muted uppercase">Picks</div></div>
+      </div>
+      <div class="flex items-center justify-between text-[10px] text-muted mb-2.5 px-1">
+        <span><i data-lucide="users" class="icon-sm"></i> ${m.followers.toLocaleString ? m.followers.toLocaleString() : m.followers} followers</span>
+        <span>Last 10: <span class="streak-dots inline-flex gap-0.5 align-middle">${(p.streak||[]).map(s=>`<span class="streak-dot streak-${s}"></span>`).join('')}</span></span>
+      </div>
+      <div class="flex items-center gap-2">
+        <button class="follow-btn flex-1 px-3 py-1.5 rounded-md text-xs font-semibold" data-follow="${p.seller}" onclick="event.stopPropagation();toggleFollow('${p.seller}',this)">
+          <i data-lucide="user-plus" class="icon-sm"></i><span class="follow-label">Follow</span>
+        </button>
+        <button class="btn-ghost px-3 py-1.5 rounded-md text-xs" onclick="event.stopPropagation();showView('seller-profile')">View profile</button>
+      </div>
+    </div>
+  `;
+}
+
+function toggleFollow(handle, btn) {
+  const wasOn = FOLLOWING.has(handle);
+  if (wasOn) FOLLOWING.delete(handle); else FOLLOWING.add(handle);
+  syncFollowButtons();
+  updateFollowingBadges();
+  if (MARKET_FILTER === 'following') renderMarketplace();
+}
+
+function syncFollowButtons() {
+  document.querySelectorAll('[data-follow]').forEach(b => {
+    const h = b.getAttribute('data-follow');
+    const on = FOLLOWING.has(h);
+    b.classList.toggle('active', on);
+    const lbl = b.querySelector('.follow-label');
+    if (lbl) lbl.textContent = on ? 'Following' : 'Follow';
+    const icon = b.querySelector('i');
+    if (icon) icon.setAttribute('data-lucide', on ? 'user-check' : 'user-plus');
+  });
+  if (window.lucide) lucide.createIcons();
+}
+
+function updateFollowingBadges() {
+  const el = document.getElementById('following-count');
+  if (el) el.textContent = FOLLOWING.size;
+}
+
+function setMarketFilter(f) {
+  MARKET_FILTER = f;
+  document.querySelectorAll('[data-market-filter]').forEach(b => {
+    b.classList.toggle('filter-active', b.getAttribute('data-market-filter') === f);
+  });
+  renderMarketplace();
+}
+
+function renderMarketplace() {
+  const list = MARKET_FILTER === 'following'
+    ? PICKS.filter(p => FOLLOWING.has(p.seller))
+    : PICKS;
+  const grid = document.getElementById('picks-grid');
+  if (list.length === 0) {
+    grid.innerHTML = `<div class="col-span-full card rounded-lg p-10 text-center">
+      <i data-lucide="user-search" class="icon-xl text-muted mx-auto mb-2"></i>
+      <div class="font-semibold mb-1">No picks from sellers you follow</div>
+      <div class="text-muted text-sm mb-3">Follow sellers to see their picks here.</div>
+      <button onclick="setMarketFilter('all')" class="btn-primary px-4 py-2 rounded-md text-sm">Show all picks</button>
+    </div>`;
+  } else {
+    grid.innerHTML = list.map(pickCard).join('');
+  }
+  if (window.lucide) lucide.createIcons();
+  syncBookmarkButtons();
+  syncFollowButtons();
+  if (typeof bindCardInteractions === 'function') bindCardInteractions();
+}
+
+// Settled bookmarks: simulated past picks the user had bookmarked, with outcomes
+const SETTLED_BOOKMARKS = [
+  { pick:'Judge O1.5 TB', seller:'@firstpitch', verified:true, game:'NYY vs BAL · 2d ago', price:5, outcome:'won', detail:'3 TB',  pl:'+$5.50' },
+  { pick:'Cole O7.5 K',   seller:'@strikezone', verified:true, game:'NYY vs TOR · 3d ago', price:4, outcome:'won', detail:'9 K',   pl:'+$4.40' },
+  { pick:'Tatum O28.5',   seller:'@hoopsedge',  verified:true, game:'BOS vs MIA · 4d ago', price:6, outcome:'lost', detail:'24 PTS', pl:'-$6.00' },
+  { pick:'McDavid O0.5 G',seller:'@icecold',    verified:true, game:'EDM vs VAN · 6d ago', price:3, outcome:'won', detail:'1 G',   pl:'+$3.30' },
+  { pick:'Acuña SB',      seller:'@diamondking',verified:true, game:'ATL vs MIA · 9d ago', price:5, outcome:'lost', detail:'0 SB', pl:'-$5.00' },
+];
+
+function toggleBookmark(id, btn) {
+  const wasOn = BOOKMARKS.has(id);
+  if (wasOn) BOOKMARKS.delete(id); else BOOKMARKS.add(id);
+  // Sync all matching buttons across views
+  document.querySelectorAll(`[data-bookmark="${id}"]`).forEach(b => {
+    b.classList.toggle('active', !wasOn);
+    b.classList.add('pulse');
+    setTimeout(()=>b.classList.remove('pulse'), 500);
+    b.title = wasOn ? 'Bookmark to track' : 'Bookmarked · click to remove';
+  });
+  updateBookmarkBadges();
+  if (document.getElementById('view-bookmarks').classList.contains('active')) renderBookmarks();
+}
+
+function updateBookmarkBadges() {
+  const n = BOOKMARKS.size;
+  const el = document.getElementById('nav-bookmark-count');
+  if (el) el.textContent = n;
+  const t = document.getElementById('bk-stat-tracking');
+  if (t) t.textContent = n;
+  const ca = document.getElementById('bk-count-active');
+  if (ca) ca.textContent = n;
+}
+
+function syncBookmarkButtons() {
+  document.querySelectorAll('[data-bookmark]').forEach(b => {
+    const id = parseInt(b.getAttribute('data-bookmark'),10);
+    b.classList.toggle('active', BOOKMARKS.has(id));
+  });
+}
+
+function renderBookmarks() {
+  const active = PICKS.filter(p => BOOKMARKS.has(p.id));
+  const grid = document.getElementById('bk-active');
+  const empty = document.getElementById('bk-empty');
+  const settledWrap = document.getElementById('bk-settled');
+  const tab = document.querySelector('[data-bk-tab].tab-active')?.getAttribute('data-bk-tab') || 'active';
+
+  if (tab === 'active') {
+    settledWrap.classList.add('hidden');
+    if (active.length === 0) {
+      grid.classList.add('hidden');
+      empty.classList.remove('hidden');
+    } else {
+      grid.classList.remove('hidden');
+      empty.classList.add('hidden');
+      grid.innerHTML = active.map(pickCard).join('');
+    }
+  } else {
+    grid.classList.add('hidden');
+    empty.classList.add('hidden');
+    settledWrap.classList.remove('hidden');
+    document.getElementById('bk-settled').innerHTML = SETTLED_BOOKMARKS.map(settledBookmarkCard).join('');
+  }
+  if (window.lucide) lucide.createIcons();
+  syncBookmarkButtons();
+  if (typeof bindCardInteractions === 'function') bindCardInteractions();
+}
+
+function bindBookmarkTabs() {
+  document.querySelectorAll('[data-bk-tab]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('[data-bk-tab]').forEach(b => { b.classList.remove('tab-active'); b.classList.add('tab-inactive'); });
+      btn.classList.add('tab-active'); btn.classList.remove('tab-inactive');
+      renderBookmarks();
+    });
+  });
+  document.querySelectorAll('[data-mp-tab]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('[data-mp-tab]').forEach(b => { b.classList.remove('tab-active'); b.classList.add('tab-inactive'); });
+      btn.classList.add('tab-active'); btn.classList.remove('tab-inactive');
+      currentMyPicksFilter = btn.getAttribute('data-mp-tab');
+      renderMyPicks(currentMyPicksFilter);
+    });
+  });
+}
+
+function fmtCountdown(mins) {
+  if (mins < 60) return mins + 'm';
+  const h = Math.floor(mins/60), m = mins % 60;
+  return h + 'h ' + (m<10?'0':'') + m + 'm';
+}
+
+function pickCard(p) {
+  const tierBadge = p.tier === 'insured'
+    ? `<span class="pill bg-accent text-bg flex items-center gap-1"><i data-lucide="shield-check" class="icon-sm"></i>INSURED</span>`
+    : `<span class="pill bg-white/10 text-white border border-white/15 flex items-center gap-1"><i data-lucide="badge-check" class="icon-sm"></i>VERIFIED</span>`;
+  const confDots = Array.from({length:3}, (_,i) =>
+    `<span class="conf-dot ${i < p.confidence ? 'conf-on' : 'conf-off'}"></span>`).join('');
+  const signals = (p.signals || []).slice(0,3).map(s => {
+    const m = SIGNAL_META[s]; if (!m) return '';
+    return `<span class="signal-badge ${m.cls}"><i data-lucide="${m.icon}" class="icon-sm"></i>${m.label}</span>`;
+  }).join('');
+  const streak = (p.streak || []).map(s =>
+    `<span class="streak-dot streak-${s}"></span>`).join('');
+  const stakePct = Math.min(100, Math.round((p.stake / 250) * 100));
+  const streamLines = Array.from({length:7}, () => {
+    const x = Math.floor(Math.random()*95)+2;
+    const d = (1.5 + Math.random()*2.5).toFixed(2) + 's';
+    const del = (Math.random()*2).toFixed(2) + 's';
+    return `<span style="--x:${x}%;--d:${d};--del:${del}"></span>`;
+  }).join('');
+  const logo = SPORT_LOGO[p.sportKey] || '';
+  return `
+    <div onclick="showView('pick')" class="pick-card cursor-pointer group" data-tilt data-pickid="${p.id}">
+      <div class="holo-border"></div>
+      <div class="spotlight"></div>
+      <!-- Banner -->
+      <div class="relative h-36 gradient-${p.sportKey} lock-grid scan-line p-4 flex items-end justify-between overflow-hidden">
+        <div class="data-stream">${streamLines}</div>
+        <div class="corner-bracket tl"></div>
+        <div class="corner-bracket tr"></div>
+        <div class="corner-bracket bl"></div>
+        <div class="corner-bracket br"></div>
+        <div class="absolute top-3 left-3 flex items-center gap-1.5 z-10">
+          <div class="sport-disc text-white">${logo}</div>
+          <span class="pill bg-black/50 text-white border border-white/10 backdrop-blur">${p.sport}</span>
+          <span class="pill bg-black/50 text-white/80 border border-white/10 backdrop-blur">${p.tag}</span>
+        </div>
+        <div class="absolute top-3 right-3 z-10">${tierBadge}</div>
+        <div class="text-white relative z-10 flex items-center gap-3 w-full">
+          <div class="lock-cube"><i data-lucide="lock" class="icon-lg"></i></div>
+          <div class="flex-1 min-w-0">
+            <div class="text-[10px] uppercase tracking-[0.18em] text-white/55 font-semibold mb-1 flex items-center gap-1.5"><span class="w-1 h-1 rounded-full bg-accent animate-pulse"></span>Encrypted · AES-256</div>
+            <div class="decrypt-text" data-decrypt>
+              <span>X</span><span>X</span><span>X</span><span>X</span><span>X</span><span>X</span><span>X</span><span>X</span><span>X</span><span>X</span><span>X</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      <!-- Body -->
+      <div class="p-4 relative">
+        <button class="bookmark-btn" onclick="event.stopPropagation();toggleBookmark(${p.id},this)" data-bookmark="${p.id}" title="Bookmark to track">
+          <i data-lucide="bookmark" class="icon-sm"></i>
+        </button>
+        <div class="flex items-center justify-between mb-3 pr-9">
+          <div class="flex items-center gap-2 text-xs">
+            <i data-lucide="swords" class="icon-sm text-zinc-500"></i>
+            <span class="text-zinc-200 font-semibold">${p.game}</span>
+          </div>
+          <span class="countdown" data-countdown="${p.lockMins}"><i data-lucide="timer" class="icon-sm"></i>${fmtCountdown(p.lockMins)}</span>
+        </div>
+        <div class="flex items-center justify-between gap-2 mb-3 flex-wrap">
+          <div class="odds-pill"><span class="text-[9px] text-muted uppercase tracking-wider mr-1.5">Odds</span><span class="font-mono text-xs text-white">${p.oddsRange}</span></div>
+          <div class="stake-pill" title="Seller has $${p.stake} of their own money on this pick"><i data-lucide="coins" class="icon-sm"></i>$${p.stake} staked</div>
+          <div class="flex items-center gap-1.5"><span class="text-[9px] text-muted uppercase tracking-wider">Conf</span><span class="flex items-center gap-1">${confDots}</span></div>
+        </div>
+        ${signals ? `<div class="flex flex-wrap gap-1.5 mb-3">${signals}</div>` : ''}
+
+        <!-- Recent streak -->
+        <div class="flex items-center justify-between mb-3 text-[10px]">
+          <div class="flex items-center gap-2">
+            <span class="text-muted uppercase tracking-wider">Last 10</span>
+            <span class="streak-dots">${streak}</span>
+          </div>
+          <span class="view-pulse" data-viewers="${p.viewers}"><span class="view-pulse-dot"></span><span data-viewer-count>${p.viewers}</span> watching</span>
+        </div>
+
+        <div class="seller-hover-wrap relative inline-block mb-4" onclick="event.stopPropagation()">
+          <div class="seller-chip rounded-full inline-flex items-center gap-2 pl-1 pr-3 py-1 cursor-pointer" data-seller="${p.seller}">
+            <div class="w-6 h-6 rounded-full bg-gradient-to-br from-accent to-blue-500"></div>
+            <span class="text-xs font-semibold">${p.seller}</span>
+            ${p.verified ? '<i data-lucide="check-circle-2" class="icon-sm text-accent"></i>' : ''}
+            <span class="text-[10px] text-muted ml-1 font-mono">${p.hit} · ${p.roi}</span>
+          </div>
+          ${sellerPopover(p)}
+        </div>
+        <div class="flex items-center justify-between">
+          <div>
+            <div class="stat-num text-2xl text-gradient price-num">$${p.price}</div>
+            <div class="text-[10px] text-muted flex items-center gap-1"><i data-lucide="users" class="icon-sm"></i>${p.buyers} locked in</div>
+          </div>
+          <button class="btn-primary unlock-btn px-4 py-2 rounded-md text-sm flex items-center gap-1.5"><i data-lucide="unlock" class="icon-sm"></i>Unlock</button>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+function sellerCard(s) {
+  const sportKey = s.sport.toLowerCase().includes('mlb') || s.sport.toLowerCase().includes('hitter') || s.sport.toLowerCase().includes('pitcher') ? 'mlb'
+    : s.sport.toLowerCase().includes('nba') ? 'nba'
+    : s.sport.toLowerCase().includes('nhl') ? 'nhl' : 'nfl';
+  const members = (s.picks * 7 + 23);
+  return `
+    <div onclick="showView('seller-profile')" class="pick-card cursor-pointer">
+      <div class="h-20 gradient-${sportKey} relative">
+        <div class="absolute -bottom-6 left-4 w-12 h-12 rounded-xl bg-gradient-to-br from-accent to-blue-500 border-4 border-panel flex items-center justify-center text-lg font-bold text-bg">${s.handle.charAt(1).toUpperCase()}</div>
+        ${s.verified?'<span class="absolute top-3 right-3 pill bg-black/40 text-accent border border-accent/30 backdrop-blur">✓ ' + (s.badge || 'VERIFIED') + '</span>':''}
+      </div>
+      <div class="p-4 pt-8">
+        <div class="font-semibold text-sm">${s.handle}</div>
+        <div class="text-xs text-muted mb-3">${s.sport} · ${members} members</div>
+        <div class="grid grid-cols-3 gap-2 text-center mb-3 bg-panel2 rounded-md p-2">
+          <div><div class="stat-num text-accent text-xs">${s.roi}</div><div class="text-[9px] text-muted uppercase">ROI</div></div>
+          <div><div class="stat-num text-xs">${s.hit}</div><div class="text-[9px] text-muted uppercase">Hit</div></div>
+          <div><div class="stat-num text-xs">${s.picks}</div><div class="text-[9px] text-muted uppercase">Picks</div></div>
+        </div>
+        <button class="btn-primary w-full py-1.5 rounded-md text-xs">Join — $${s.sub}/mo</button>
+      </div>
+    </div>
+  `;
+}
+
+function leaderboardCard(s) {
+  const sportKey = s.sport.toLowerCase().includes('mlb') ? 'mlb'
+                : s.sport.toLowerCase().includes('nba') ? 'nba'
+                : s.sport.toLowerCase().includes('nhl') ? 'nhl'
+                : s.sport.toLowerCase().includes('nfl') ? 'nfl' : 'mlb';
+  const logo = SPORT_LOGO[sportKey] || '';
+  const isTop3 = s.rank <= 3;
+  const medalCls = s.rank === 1 ? 'lb-rank-gold' : s.rank === 2 ? 'lb-rank-silver' : s.rank === 3 ? 'lb-rank-bronze' : '';
+  const followed = FOLLOWING.has(s.handle);
+  return `
+    <div class="lb-card ${isTop3?'lb-card-top':''}" onclick="showView('seller-profile')">
+      <div class="lb-rank ${medalCls}">#${s.rank}</div>
+      <div class="lb-banner gradient-${sportKey}">
+        <div class="rc-scan"></div>
+        <div class="absolute top-3 right-3"><div class="sport-disc text-white">${logo}</div></div>
+      </div>
+      <div class="lb-body">
+        <div class="lb-avatar">${s.handle.charAt(1).toUpperCase()}</div>
+        <div class="flex-1 min-w-0 pl-3">
+          <div class="flex items-center gap-1.5">
+            <span class="font-semibold text-sm">${s.handle}</span>
+            ${s.verified?'<i data-lucide="check-circle-2" class="icon-sm text-accent"></i>':''}
+          </div>
+          <div class="text-[10px] text-muted">${s.sport} · ${s.picks} picks · ${s.price}</div>
+        </div>
+        <div class="text-right">
+          <div class="stat-num text-lg text-accent">${s.roi}</div>
+          <div class="text-[9px] text-muted uppercase tracking-wider">30d ROI</div>
+        </div>
+      </div>
+      <div class="lb-stats">
+        <div><div class="text-[9px] text-muted uppercase">Hit</div><div class="stat-num text-sm">${s.hit}</div></div>
+        <div><div class="text-[9px] text-muted uppercase">Units</div><div class="stat-num text-sm text-accent">${s.units}</div></div>
+        <div><div class="text-[9px] text-muted uppercase">Picks</div><div class="stat-num text-sm">${s.picks}</div></div>
+        <div class="lb-action">
+          <button onclick="event.stopPropagation();toggleFollow('${s.handle}',this)" data-follow="${s.handle}" class="follow-btn px-3 py-1.5 rounded-md text-xs ${followed?'active':''}">
+            <i data-lucide="${followed?'user-check':'user-plus'}" class="icon-sm"></i><span class="follow-label">${followed?'Following':'Follow'}</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+function renderAll() {
+  renderMarketplace();
+  document.getElementById('sellers-grid').innerHTML = SELLERS.map(sellerCard).join('');
+  document.getElementById('seller-picks').innerHTML = PICKS.slice(0,3).map(pickCard).join('');
+  document.getElementById('leaderboard-grid').innerHTML = LEADERBOARD.map(leaderboardCard).join('');
+
+  // perf chart
+  const data = [10,12,8,15,18,14,22,19,25,28,24,32,29,35,31,38,42,39,45,48];
+  const max = Math.max(...data);
+  document.getElementById('perf-chart').innerHTML = data.map((v,i)=>`
+    <div class="flex-1 bg-accent/70 hover:bg-accent rounded-t" style="height:${(v/max)*100}%" title="Day ${i+1}: +${v}u"></div>
+  `).join('');
+}
+
+function showView(v) {
+  document.querySelectorAll('.view').forEach(el => el.classList.remove('active'));
+  document.getElementById('view-'+v).classList.add('active');
+  window.scrollTo({top:0,behavior:'instant'});
+  // Populate any data-stream containers that are empty
+  document.querySelectorAll('.data-stream').forEach(s => {
+    if (!s.children.length) {
+      s.innerHTML = Array.from({length:7}, () => {
+        const x = Math.floor(Math.random()*95)+2;
+        return `<span style="--x:${x}%;--d:${(1.5+Math.random()*2.5).toFixed(2)}s;--del:${(Math.random()*2).toFixed(2)}s"></span>`;
+      }).join('');
+    }
+  });
+  if (window.lucide) lucide.createIcons();
+  if (typeof bindCardInteractions === 'function') bindCardInteractions();
+  if (v === 'bookmarks') renderBookmarks();
+  if (v === 'mypicks') renderMyPicks(currentMyPicksFilter);
+  syncBookmarkButtons();
+}
+
+function tickRefundCounter() {
+  const el = document.getElementById('refund-counter');
+  if (!el) return;
+  let val = 184302;
+  setInterval(() => {
+    val += Math.floor(Math.random() * 8) + 2;
+    el.textContent = '$' + val.toLocaleString();
+  }, 2400);
+}
+
+function openBuyModal() {
+  document.getElementById('modal-buy').classList.remove('hidden');
+  document.getElementById('buy-step-1').classList.remove('hidden');
+  document.getElementById('buy-step-2').classList.add('hidden');
+  document.getElementById('buy-step-3').classList.add('hidden');
+  if (window.lucide) lucide.createIcons();
+  // re-scramble the modal preview
+  const modalCard = document.getElementById('buy-step-1');
+  if (modalCard) scrambleDecrypt(modalCard);
+}
+function closeBuyModal() { document.getElementById('modal-buy').classList.add('hidden'); }
+function simulateBuy() {
+  document.getElementById('buy-step-1').classList.add('hidden');
+  document.getElementById('buy-step-2').classList.remove('hidden');
+  // Generate stream lines
+  const stream = document.getElementById('unlock-stream');
+  if (stream) {
+    stream.innerHTML = Array.from({length:10}, () => {
+      const x = Math.floor(Math.random()*95)+2;
+      return `<span style="--x:${x}%;--d:${(1.2+Math.random()*1.6).toFixed(2)}s;--del:${(Math.random()*1.2).toFixed(2)}s"></span>`;
+    }).join('');
+  }
+  if (window.lucide) lucide.createIcons();
+  const status = document.getElementById('unlock-status');
+  const title = document.getElementById('unlock-title');
+  const progress = document.getElementById('unlock-progress');
+  const cube = document.getElementById('unlock-cube');
+  const reveal = document.getElementById('unlock-reveal');
+
+  // Stage 1: verify payment
+  progress.style.width = '15%';
+  setTimeout(() => {
+    status.textContent = 'Payment escrowed · $5.00';
+    title.textContent = 'Decrypting…';
+    progress.style.width = '45%';
+  }, 600);
+  // Stage 2: decrypt
+  setTimeout(() => {
+    status.textContent = 'AES-256 keys exchanged';
+    progress.style.width = '78%';
+    cube.innerHTML = '<i data-lucide="lock-keyhole-open" class="icon-xl"></i>';
+    cube.style.transform = 'rotateY(180deg) scale(1.1)';
+    cube.style.boxShadow = '0 0 40px rgba(34,197,94,0.8), 0 0 0 1px rgba(34,197,94,0.6)';
+    if (window.lucide) lucide.createIcons();
+  }, 1400);
+  // Stage 3: reveal
+  setTimeout(() => {
+    progress.style.width = '100%';
+    status.textContent = 'Unlocked';
+    title.textContent = 'Pick revealed';
+    reveal.classList.remove('hidden');
+    if (window.lucide) lucide.createIcons();
+  }, 2200);
+}
+function fireConfetti() {
+  const colors = ['#22c55e', '#16a34a', '#3b82f6', '#fde047', '#f472b6'];
+  for (let i = 0; i < 80; i++) {
+    const c = document.createElement('div');
+    c.className = 'confetti';
+    c.style.left = Math.random() * 100 + 'vw';
+    c.style.background = colors[Math.floor(Math.random()*colors.length)];
+    c.style.animationDelay = (Math.random() * 0.5) + 's';
+    c.style.animationDuration = (1.8 + Math.random() * 1.5) + 's';
+    c.style.transform = `rotate(${Math.random()*360}deg)`;
+    document.body.appendChild(c);
+    setTimeout(() => c.remove(), 3500);
+  }
+}
+
+function simulateGameResult() {
+  document.getElementById('buy-step-2').classList.add('hidden');
+  document.getElementById('buy-step-3').classList.remove('hidden');
+  const won = Math.random() > 0.4;
+  const icon = document.getElementById('result-icon');
+  const title = document.getElementById('result-title');
+  const body = document.getElementById('result-body');
+  const card = icon.closest('.card');
+
+  // Show "grading" state first
+  icon.className = 'w-20 h-20 mx-auto rounded-2xl bg-blue-500/10 border border-blue-500/30 flex items-center justify-center mb-5 progress-anim';
+  icon.innerHTML = '<i data-lucide="loader-2" class="icon-2xl text-blue-400 animate-spin"></i>';
+  title.innerHTML = '<span class="text-zinc-400">Grading from box score…</span>';
+  body.innerHTML = `<div class="flex items-center gap-2 text-muted text-xs"><i data-lucide="rss" class="icon-sm text-accent"></i>Pulling final stats from MLB Stats API…</div>`;
+  if (window.lucide) lucide.createIcons();
+
+  setTimeout(() => {
+    if (won) {
+      icon.className = 'w-20 h-20 mx-auto rounded-2xl bg-accent/10 border border-accent/40 flex items-center justify-center mb-5 pop-anim';
+      icon.innerHTML = '<i data-lucide="target" class="icon-2xl text-accent"></i>';
+      icon.style.boxShadow = '0 0 60px rgba(34,197,94,0.5)';
+      title.innerHTML = `<span class="text-accent">Pick hit</span> — Judge had 3 TB`;
+      body.innerHTML = `
+        <div class="flex items-center justify-between mb-3 pb-3 border-b border-border">
+          <span class="text-xs text-muted uppercase tracking-wider">If you bet at +115</span>
+          <span class="stat-num text-accent text-lg">+1.15u</span>
+        </div>
+        <div class="space-y-1.5 text-xs">
+          <div class="flex items-center gap-2"><i data-lucide="check-circle-2" class="icon-sm text-accent"></i>Seller paid out</div>
+          <div class="flex items-center gap-2"><i data-lucide="check-circle-2" class="icon-sm text-accent"></i>Their hit rate climbed to 58.4%</div>
+          <div class="flex items-center gap-2"><i data-lucide="check-circle-2" class="icon-sm text-accent"></i>Settled in 47 min via official feed</div>
+        </div>
+        <div class="mt-3 pt-3 border-t border-border text-[11px] text-muted">$5 was the price of a winning pick.</div>`;
+      if (window.lucide) lucide.createIcons();
+      fireConfetti();
+    } else {
+      card.classList.add('shake-anim');
+      icon.className = 'w-20 h-20 mx-auto rounded-2xl bg-accent/10 border border-accent/40 flex items-center justify-center mb-5 pop-anim';
+      icon.innerHTML = '<i data-lucide="rotate-ccw" class="icon-2xl text-accent"></i>';
+      icon.style.boxShadow = '0 0 60px rgba(34,197,94,0.4)';
+      title.innerHTML = `Pick lost — <span class="text-accent">$4.75 refunded</span>`;
+      body.innerHTML = `
+        <div class="flex items-center justify-between mb-3 pb-3 border-b border-border">
+          <span class="text-xs text-muted uppercase tracking-wider">Refund to card</span>
+          <span class="stat-num text-accent text-lg">$4.75</span>
+        </div>
+        <div class="space-y-1.5 text-xs">
+          <div class="flex items-center gap-2"><i data-lucide="check-circle-2" class="icon-sm text-accent"></i>Refund processed (Stripe ··· 4242)</div>
+          <div class="flex items-center gap-2"><i data-lucide="check-circle-2" class="icon-sm text-accent"></i>@firstpitch's $120 stake was slashed</div>
+          <div class="flex items-center gap-2"><i data-lucide="check-circle-2" class="icon-sm text-accent"></i>Their hit rate dropped to 57.4%</div>
+        </div>
+        <div class="mt-3 pt-3 border-t border-border text-[11px] text-muted">This is why the system works.</div>`;
+      if (window.lucide) lucide.createIcons();
+      setTimeout(() => card.classList.remove('shake-anim'), 700);
+    }
+  }, 1600);
+}
+function openPostPickModal() { document.getElementById('modal-post').classList.remove('hidden'); }
+function closePostModal() { document.getElementById('modal-post').classList.add('hidden'); }
+
+// Onboarding wizard
+function openOnboarding() {
+  document.getElementById('modal-onboarding').classList.remove('hidden');
+  onbNext(1);
+}
+function closeOnboarding() { document.getElementById('modal-onboarding').classList.add('hidden'); }
+function onbNext(step) {
+  for (let i = 1; i <= 4; i++) {
+    document.getElementById('onb-step-'+i).classList.add('hidden');
+    document.getElementById('onb-dot-'+i).className = 'flex-1 h-1 rounded-full ' + (i <= step ? 'bg-accent' : 'bg-border');
+  }
+  document.getElementById('onb-step-'+step).classList.remove('hidden');
+}
+function finishOnboarding() {
+  closeOnboarding();
+  showView('dashboard');
+}
+
+// ═══════ Guided tour ═══════
+const TOUR_STEPS = [
+  { center: true, title: 'Welcome to PicksVault', body: 'Sports picks with skin-in-the-game accountability. If the pick loses, you get refunded automatically. Let\'s walk through it in 60 seconds.', cta: 'Start tour', view: 'marketplace' },
+  { selector: '#picks-grid > div:first-child', title: 'Locked picks', body: 'Each card is a one-time-purchase pick. The actual play (player, line, side) is encrypted until you pay. Hover the card.', cta: 'Next', view: 'marketplace', scroll: true },
+  { selector: '#picks-grid > div:first-child .stake-pill', title: 'Skin in the game', body: 'The seller has their own money on this pick — that\'s why you can trust the call. If they\'re wrong, they lose their stake.', cta: 'Next', view: 'marketplace' },
+  { selector: '#picks-grid > div:first-child .seller-hover-wrap', title: 'Vet the seller', body: 'Hover any seller name to see their full stats: ROI, hit rate, units, follower count. Follow them to filter their picks.', cta: 'Next', view: 'marketplace', forceHover: true },
+  { selector: '#picks-grid > div:first-child .bookmark-btn', title: 'Bookmark to track', body: 'Not ready to commit? Bookmark a pick and watch it. You\'ll see if it would have hit before you risk a dollar.', cta: 'Next', view: 'marketplace' },
+  { selector: '#picks-grid > div:first-child .unlock-btn', title: 'Unlock a pick', body: 'When you\'re ready, click Unlock to pay. Your money is escrowed — if the pick loses, it auto-refunds within an hour. Click Next to see it in action.', cta: 'Watch unlock', view: 'marketplace', autoBuy: true },
+  { center: true, title: 'You\'re covered', body: 'That\'s the whole loop. Sellers stake real money. Picks auto-grade off the box score. Refunds hit your card within an hour. No support tickets, no "next time".', cta: 'Done', view: 'marketplace', final: true },
+];
+let tourIdx = 0;
+let tourActive = false;
+
+function startTour() {
+  tourActive = true;
+  tourIdx = 0;
+  showView('marketplace');
+  ensureTourOverlay();
+  document.getElementById('tour-overlay').classList.add('active');
+  setTimeout(() => renderTourStep(), 200);
+}
+
+function ensureTourOverlay() {
+  if (document.getElementById('tour-overlay')) return;
+  const ov = document.createElement('div');
+  ov.id = 'tour-overlay';
+  ov.className = 'tour-overlay';
+  ov.onclick = (e) => { if (e.target === ov) {} };
+  document.body.appendChild(ov);
+  const tip = document.createElement('div');
+  tip.id = 'tour-tip';
+  tip.className = 'tour-tip';
+  document.body.appendChild(tip);
+}
+
+function clearTourTarget() {
+  document.querySelectorAll('.tour-target').forEach(el => el.classList.remove('tour-target'));
+  document.querySelectorAll('.force-tour-hover').forEach(el => el.classList.remove('force-tour-hover'));
+}
+
+function renderTourStep() {
+  const step = TOUR_STEPS[tourIdx];
+  const tip = document.getElementById('tour-tip');
+  if (!step || !tip) return;
+  clearTourTarget();
+
+  if (step.view) showView(step.view);
+
+  // progress dots
+  const dots = TOUR_STEPS.map((_, i) => {
+    if (i < tourIdx) return '<span class="done"></span>';
+    if (i === tourIdx) return '<span class="current"></span>';
+    return '<span></span>';
+  }).join('');
+
+  tip.innerHTML = `
+    <div class="tour-tip-step">STEP ${tourIdx + 1} / ${TOUR_STEPS.length}</div>
+    <div class="tour-tip-title">${step.title}</div>
+    <div class="tour-tip-body">${step.body}</div>
+    <div class="tour-tip-progress">${dots}</div>
+    <div class="tour-tip-actions">
+      ${tourIdx > 0 ? '<button class="btn-tour-back" onclick="tourBack()">Back</button>' : ''}
+      <button class="btn-tour-next" onclick="tourNext()"><i data-lucide="arrow-right" class="icon-sm"></i>${step.cta || 'Next'}</button>
+      ${!step.final ? '<button class="btn-tour-skip" onclick="endTour()">Skip</button>' : ''}
+    </div>
+  `;
+
+  if (step.center) {
+    tip.classList.add('tour-center');
+    tip.removeAttribute('data-arrow');
+  } else {
+    tip.classList.remove('tour-center');
+    setTimeout(() => positionTipForTarget(step), 50);
+  }
+
+  if (step.forceHover && step.selector) {
+    setTimeout(() => {
+      const el = document.querySelector(step.selector);
+      if (el) el.classList.add('force-tour-hover');
+    }, 100);
+  }
+
+  if (window.lucide) lucide.createIcons();
+}
+
+function positionTipForTarget(step) {
+  const tip = document.getElementById('tour-tip');
+  const target = document.querySelector(step.selector);
+  if (!target || !tip) return;
+
+  // Scroll into view if needed
+  if (step.scroll !== false) {
+    const r = target.getBoundingClientRect();
+    if (r.top < 80 || r.bottom > window.innerHeight - 80) {
+      target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+  }
+
+  setTimeout(() => {
+    target.classList.add('tour-target');
+    const r = target.getBoundingClientRect();
+    const tipW = 340;
+    const tipH = tip.offsetHeight || 200;
+    const margin = 18;
+    let left, top, arrow;
+
+    // Prefer right side, fallback to left, then bottom, then top
+    if (r.right + tipW + margin < window.innerWidth) {
+      left = r.right + margin;
+      top = Math.max(20, Math.min(window.innerHeight - tipH - 20, r.top));
+      arrow = 'left';
+    } else if (r.left - tipW - margin > 0) {
+      left = r.left - tipW - margin;
+      top = Math.max(20, Math.min(window.innerHeight - tipH - 20, r.top));
+      arrow = 'right';
+    } else if (r.bottom + tipH + margin < window.innerHeight) {
+      left = Math.max(16, Math.min(window.innerWidth - tipW - 16, r.left));
+      top = r.bottom + margin;
+      arrow = 'top';
+    } else {
+      left = Math.max(16, Math.min(window.innerWidth - tipW - 16, r.left));
+      top = Math.max(20, r.top - tipH - margin);
+      arrow = 'bottom';
+    }
+
+    tip.style.left = left + 'px';
+    tip.style.top = top + 'px';
+    tip.setAttribute('data-arrow', arrow);
+  }, 250);
+}
+
+function tourNext() {
+  const step = TOUR_STEPS[tourIdx];
+  if (step.final) { endTour(); return; }
+  if (step.autoBuy) {
+    // Trigger the buy flow inline
+    endTour(/*soft*/true);
+    setTimeout(() => {
+      openBuyModal();
+      setTimeout(() => simulateBuy(), 600);
+      setTimeout(() => {
+        tourActive = true;
+        tourIdx++;
+        ensureTourOverlay();
+        document.getElementById('tour-overlay').classList.add('active');
+        renderTourStep();
+      }, 3500);
+    }, 200);
+    return;
+  }
+  tourIdx++;
+  if (tourIdx >= TOUR_STEPS.length) { endTour(); return; }
+  renderTourStep();
+}
+
+function tourBack() {
+  if (tourIdx === 0) return;
+  tourIdx--;
+  renderTourStep();
+}
+
+function endTour(soft) {
+  tourActive = false;
+  clearTourTarget();
+  const ov = document.getElementById('tour-overlay');
+  const tip = document.getElementById('tour-tip');
+  if (ov) ov.classList.remove('active');
+  if (tip) tip.style.display = 'none';
+  if (!soft) {
+    setTimeout(() => {
+      if (ov) ov.remove();
+      if (tip) tip.remove();
+    }, 400);
+  } else {
+    setTimeout(() => { if (tip) tip.style.display = ''; }, 100);
+  }
+}
+
+// ═══════ Theme ═══════
+function applyTheme(t) {
+  document.documentElement.setAttribute('data-theme', t);
+  try { localStorage.setItem('pv-theme', t); } catch(e) {}
+  const icon = document.getElementById('theme-icon');
+  if (icon) {
+    icon.setAttribute('data-lucide', t === 'light' ? 'moon' : 'sun');
+    if (window.lucide) lucide.createIcons();
+  }
+}
+function toggleTheme() {
+  const cur = document.documentElement.getAttribute('data-theme') || 'light';
+  applyTheme(cur === 'light' ? 'dark' : 'light');
+}
+(function initTheme() {
+  let saved = 'light';
+  try { saved = localStorage.getItem('pv-theme') || 'light'; } catch(e) {}
+  applyTheme(saved);
+})();
+
+renderAll();
+renderMyPicks('all');
+if (window.lucide) lucide.createIcons();
+syncBookmarkButtons();
+updateBookmarkBadges();
+syncFollowButtons();
+updateFollowingBadges();
+bindBookmarkTabs();
+tickRefundCounter();
+initInteractive();
+
+// ═══════ Interactive futuristic layer ═══════
+function initInteractive() {
+  // Aurora cursor follower
+  const aurora = document.createElement('div');
+  aurora.className = 'aurora-cursor';
+  document.body.appendChild(aurora);
+  let auroraTimer;
+  document.addEventListener('mousemove', e => {
+    aurora.style.left = e.clientX + 'px';
+    aurora.style.top = e.clientY + 'px';
+    aurora.classList.add('on');
+    clearTimeout(auroraTimer);
+    auroraTimer = setTimeout(() => aurora.classList.remove('on'), 1800);
+  }, { passive: true });
+
+  bindCardInteractions();
+  startViewerTicker();
+  startCountdownTicker();
+}
+
+function bindCardInteractions() {
+  document.querySelectorAll('[data-tilt]').forEach(card => {
+    if (card._bound) return; card._bound = true;
+    let raf;
+    card.addEventListener('mousemove', e => {
+      const r = card.getBoundingClientRect();
+      const x = (e.clientX - r.left) / r.width;
+      const y = (e.clientY - r.top) / r.height;
+      cancelAnimationFrame(raf);
+      raf = requestAnimationFrame(() => {
+        card.style.setProperty('--mx', (x*100)+'%');
+        card.style.setProperty('--my', (y*100)+'%');
+        card.style.setProperty('--ry', ((x-0.5)*8)+'deg');
+        card.style.setProperty('--rx', (-(y-0.5)*8)+'deg');
+      });
+    });
+    card.addEventListener('mouseleave', () => {
+      card.style.setProperty('--rx','0deg');
+      card.style.setProperty('--ry','0deg');
+    });
+    card.addEventListener('mouseenter', () => scrambleDecrypt(card));
+    card.addEventListener('click', e => spawnRipple(card, e));
+  });
+}
+
+function spawnRipple(card, e) {
+  const r = card.getBoundingClientRect();
+  const ripple = document.createElement('div');
+  ripple.className = 'ripple';
+  ripple.style.left = (e.clientX - r.left) + 'px';
+  ripple.style.top = (e.clientY - r.top) + 'px';
+  ripple.style.width = ripple.style.height = '20px';
+  card.appendChild(ripple);
+  setTimeout(() => ripple.remove(), 700);
+}
+
+const SCRAMBLE_CHARS = '!@#$%^&*<>?/\\|ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+function scrambleDecrypt(card) {
+  const el = card.querySelector('[data-decrypt]');
+  if (!el) return;
+  const spans = el.querySelectorAll('span');
+  spans.forEach((s, i) => {
+    let ticks = 0;
+    const max = 10 + Math.floor(Math.random()*10);
+    clearInterval(s._iv);
+    s._iv = setInterval(() => {
+      s.textContent = SCRAMBLE_CHARS[Math.floor(Math.random()*SCRAMBLE_CHARS.length)];
+      if (++ticks >= max) { clearInterval(s._iv); s.textContent = '█'; }
+    }, 35 + i*8);
+  });
+}
+
+function startViewerTicker() {
+  setInterval(() => {
+    document.querySelectorAll('[data-viewer-count]').forEach(el => {
+      if (Math.random() < 0.35) {
+        const cur = parseInt(el.textContent) || 0;
+        const delta = Math.random() < 0.6 ? 1 : -1;
+        const next = Math.max(1, cur + delta);
+        el.textContent = next;
+      }
+    });
+  }, 2200);
+}
+
+function startCountdownTicker() {
+  setInterval(() => {
+    document.querySelectorAll('[data-countdown]').forEach(el => {
+      let m = parseInt(el.dataset.countdown);
+      if (m > 0) {
+        if (Math.random() < 0.25) {
+          m -= 1;
+          el.dataset.countdown = m;
+          el.innerHTML = `<i data-lucide="timer" class="icon-sm"></i>${fmtCountdown(m)}`;
+          if (window.lucide) lucide.createIcons();
+        }
+      }
+    });
+  }, 4000);
+}
+</script>
+</body>
+</html>
