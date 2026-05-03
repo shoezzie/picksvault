@@ -77,7 +77,7 @@ export default function MarketplacePage() {
   })
 
   return (
-    <div className="max-w-7xl mx-auto px-6 py-8">
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6 sm:py-8">
       {/* Hero */}
       <div className="mesh-hero text-center py-16 px-4 mb-10">
         <div className="flex items-center justify-center gap-2 mb-4">
@@ -86,7 +86,7 @@ export default function MarketplacePage() {
             Picks marketplace · auto-refunds
           </span>
         </div>
-        <h1 className="text-5xl md:text-6xl font-bold mb-4 text-gradient">
+        <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold mb-4 text-gradient">
           Picks with a refund<br />if they don&apos;t hit.
         </h1>
         <p className="text-lg max-w-xl mx-auto mb-8" style={{ color: 'var(--muted)' }}>
@@ -113,20 +113,31 @@ export default function MarketplacePage() {
           </div>
         </div>
 
-        <div className="flex items-center justify-center gap-3 flex-wrap">
+        <div className="flex flex-col sm:flex-row items-center justify-center gap-3 flex-wrap">
           <button
             onClick={() => document.getElementById('picks-grid')?.scrollIntoView({ behavior: 'smooth', block: 'start' })}
             className="btn-primary px-6 py-3 rounded-xl font-semibold flex items-center gap-2"
           >
-            <TrendingUp size={16} />
+            {/* Vault unlock — open shackle + dial */}
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+              <rect x="2" y="7" width="12" height="8" rx="2"/>
+              <path d="M5 7V4.5a3 3 0 0 1 5.8-1"/>
+              <circle cx="8" cy="11" r="1.2" fill="currentColor" stroke="none"/>
+              <line x1="8" y1="12.2" x2="8" y2="13.5"/>
+            </svg>
             Browse picks
           </button>
           <button
             onClick={() => setShowOnboarding(true)}
             className="btn-ghost px-6 py-3 rounded-xl font-semibold flex items-center gap-2"
-            style={{ color: 'var(--text)' }}
           >
-            <Shield size={16} />
+            {/* Staked coin — coin stack with upward arrow */}
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+              <ellipse cx="8" cy="11.5" rx="5" ry="2"/>
+              <path d="M3 11.5V9.5c0-1.1 2.24-2 5-2s5 .9 5 2v2"/>
+              <path d="M3 9.5V7.5c0-1.1 2.24-2 5-2s5 .9 5 2v2"/>
+              <path d="M8 5.5V2.5M6.5 4 8 2.5 9.5 4"/>
+            </svg>
             Become a seller
           </button>
         </div>
@@ -145,12 +156,12 @@ export default function MarketplacePage() {
       </div>
 
       {/* Live activity ticker */}
-      <div className="overflow-hidden rounded-xl mb-8" style={{ background: 'var(--panel)', border: '1px solid var(--border)' }}>
+      <div className="ticker-wrap rounded-xl mb-8" style={{ background: 'var(--panel)', border: '1px solid var(--border)' }}>
         <div className="px-4 py-2 border-b flex items-center gap-2" style={{ borderColor: 'var(--border)' }}>
           <div className="live-dot" />
           <span className="text-[11px] font-semibold uppercase tracking-[0.18em]" style={{ color: 'var(--muted)' }}>Live activity</span>
         </div>
-        <div className="py-2 overflow-hidden">
+        <div className="py-2">
           <div className="ticker-track flex gap-8 whitespace-nowrap px-4">
             {[...TICKER_ITEMS, ...TICKER_ITEMS].map((item, i) => (
               <div key={i} className="inline-flex items-center gap-2 text-xs flex-shrink-0">

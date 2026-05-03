@@ -1,7 +1,7 @@
 'use client'
 
 import Link from 'next/link'
-import { CheckCircle2, UserPlus, TrendingUp, Target } from 'lucide-react'
+import { CheckCircle2, UserPlus } from 'lucide-react'
 
 interface SellerCardData {
   handle: string
@@ -23,14 +23,40 @@ interface SellerCardProps {
   onFollowToggle?: (handle: string) => void
 }
 
+function sportGradient(sport: string): string {
+  const s = sport.toLowerCase()
+  if (s.includes('nba') || s.includes('basketball') || s.includes('hoops')) return 'gradient-nba'
+  if (s.includes('nfl') || s.includes('football') || s.includes('gridiron')) return 'gradient-nfl'
+  if (s.includes('nhl') || s.includes('hockey') || s.includes('ice')) return 'gradient-nhl'
+  if (s.includes('soccer') || s.includes('mls')) return 'gradient-soccer'
+  return 'gradient-mlb'
+}
+
+function sportLabel(sport: string): string {
+  const s = sport.toLowerCase()
+  if (s.includes('nba') || s.includes('basketball') || s.includes('hoops')) return 'NBA'
+  if (s.includes('nfl') || s.includes('football') || s.includes('gridiron')) return 'NFL'
+  if (s.includes('nhl') || s.includes('hockey') || s.includes('ice')) return 'NHL'
+  if (s.includes('soccer') || s.includes('mls')) return 'SOC'
+  return 'MLB'
+}
+
 export default function SellerCard({ seller, isFollowing, onFollowToggle }: SellerCardProps) {
   const avatarLetter = seller.avatar ?? seller.handle[1]?.toUpperCase() ?? 'S'
+  const gradientClass = sportGradient(seller.sport)
+  const label = sportLabel(seller.sport)
 
   return (
     <div className="card rounded-2xl overflow-hidden tilt">
       {/* Banner */}
-      <div className="gradient-mlb relative h-14">
-        <div style={{ content: "''", position: 'absolute', inset: 0, background: 'linear-gradient(180deg, transparent 0%, rgba(0,0,0,0.4) 100%)' }} />
+      <div className={`${gradientClass} relative h-20`}>
+        <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(180deg, transparent 30%, rgba(0,0,0,0.55) 100%)' }} />
+        <span
+          className="absolute bottom-2 right-3 text-[11px] font-bold tracking-[0.15em] uppercase"
+          style={{ color: 'rgba(255,255,255,0.35)' }}
+        >
+          {label}
+        </span>
       </div>
 
       {/* Body */}
